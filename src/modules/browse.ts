@@ -3,6 +3,13 @@
  * #BROWSE PAGE FEATURES
  */
 
+const updateBrowseResultVisibility = (row: HTMLTableRowElement): void => {
+    const hiddenBySnatched: boolean = row.dataset.mpHideSnatched === 'true';
+    const hiddenByBookmarked: boolean = row.dataset.mpHideBookmarked === 'true';
+
+    row.style.display = hiddenBySnatched || hiddenByBookmarked ? 'none' : 'table-row';
+};
+
 /**
  * Allows Snatched torrents to be hidden/shown
  */
@@ -17,6 +24,7 @@ class ToggleSnatched implements Feature {
     private _isVisible: boolean = true;
     private _searchList: NodeListOf<HTMLTableRowElement> | undefined;
     private _snatchedHook: string = 'td div[class^="browse"]';
+    private _rowStateKey: string = 'mpHideSnatched';
     private _share: Shared = new Shared();
 
     constructor() {
@@ -117,12 +125,16 @@ class ToggleSnatched implements Feature {
                 // Hide/show as required
                 if (this._isVisible === false) {
                     btn.innerHTML = 'Show Snatched';
-                    snatch.style.display = 'none';
+                    snatch.dataset[this._rowStateKey] = 'true';
                 } else {
                     btn.innerHTML = 'Hide Snatched';
-                    snatch.style.display = 'table-row';
+                    snatch.dataset[this._rowStateKey] = 'false';
                 }
+            } else {
+                snatch.dataset[this._rowStateKey] = 'false';
             }
+
+            updateBrowseResultVisibility(snatch);
         });
     }
 
@@ -162,7 +174,7 @@ class StickySnatchedToggle implements Feature {
         scope: SettingGroup.Search,
         type: 'checkbox',
         title: 'stickySnatchedToggle',
-        desc: `Make toggle state persist between page loads`,
+        desc: `Make snatched toggle state persist between page loads`,
     };
     private _tar: string = '#ssr';
 
@@ -176,6 +188,193 @@ class StickySnatchedToggle implements Feature {
 
     private _init() {
         console.log('[M+] Remembered snatch visibility state!');
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
+ * Allows Bookmarked torrents to be hidden/shown
+ */
+class ToggleBookmarked implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Search,
+        type: 'checkbox',
+        title: 'toggleBookmarked',
+        desc: `Add a button to hide/show results that you've bookmarked`,
+    };
+    private _tar: string = '#ssr';
+    private _isVisible: boolean = true;
+    private _searchList: NodeListOf<HTMLTableRowElement> | undefined;
+    private _bookmarkHook: string = 'a[id ^= "torDeBookmark"]';
+    private _rowStateKey: string = 'mpHideBookmarked';
+    private _share: Shared = new Shared();
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['browse']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init(): Promise<void> {
+        let toggle: Promise<HTMLElement>;
+        let resultList: Promise<NodeListOf<HTMLTableRowElement>>;
+        let results: NodeListOf<HTMLTableRowElement>;
+        const storedState: string | undefined = GM_getValue(
+            `${this._settings.title}State`
+        );
+
+        if (storedState === 'false' && GM_getValue('stickyBookmarkedToggle') === true) {
+            this._setVisState(false);
+        } else {
+            this._setVisState(true);
+        }
+
+        const toggleText: string = this._isVisible ? 'Hide Bookmarked' : 'Show Bookmarked';
+
+        await Promise.all([
+            (toggle = Util.createButton(
+                'bookmarkedToggle',
+                toggleText,
+                'h1',
+                '#resetNewIcon',
+                'beforebegin',
+                'torFormButton'
+            )),
+            (resultList = this._share.getSearchList()),
+        ]);
+
+        toggle
+            .then((btn) => {
+                btn.addEventListener(
+                    'click',
+                    () => {
+                        if (this._isVisible === true) {
+                            btn.innerHTML = 'Show Bookmarked';
+                            this._setVisState(false);
+                        } else {
+                            btn.innerHTML = 'Hide Bookmarked';
+                            this._setVisState(true);
+                        }
+                        this._filterResults(results, this._bookmarkHook);
+                    },
+                    false
+                );
+            })
+            .catch((err) => {
+                throw new Error(err);
+            });
+
+        resultList
+            .then(async (res) => {
+                results = res;
+                this._searchList = res;
+                this._filterResults(results, this._bookmarkHook);
+                console.log('[M+] Added the Toggle Bookmarked button!');
+            })
+            .then(() => {
+                Check.elemObserver(
+                    '#ssr',
+                    () => {
+                        resultList = this._share.getSearchList();
+
+                        resultList.then(async (res) => {
+                            results = res;
+                            this._searchList = res;
+                            this._filterResults(results, this._bookmarkHook);
+                        });
+                    },
+                    {
+                        childList: true,
+                        subtree: true,
+                    }
+                );
+            });
+    }
+
+    /**
+     * Filters search results
+     * @param list a search results list
+     * @param subTar the elements that must be contained in our filtered results
+     */
+    private _filterResults(list: NodeListOf<HTMLTableRowElement>, subTar: string): void {
+        list.forEach((bookmark) => {
+            const btn: HTMLHeadingElement = <HTMLHeadingElement>(
+                document.querySelector('#mp_bookmarkedToggle')!
+            );
+
+            const result = bookmark.querySelector(subTar);
+
+            if (result !== null) {
+                if (this._isVisible === false) {
+                    btn.innerHTML = 'Show Bookmarked';
+                    bookmark.dataset[this._rowStateKey] = 'true';
+                } else {
+                    btn.innerHTML = 'Hide Bookmarked';
+                    bookmark.dataset[this._rowStateKey] = 'false';
+                }
+            } else {
+                bookmark.dataset[this._rowStateKey] = 'false';
+            }
+
+            updateBrowseResultVisibility(bookmark);
+        });
+    }
+
+    private _setVisState(val: boolean): void {
+        if (MP.DEBUG) {
+            console.log('Bookmark vis state:', this._isVisible, '\nval:', val);
+        }
+        GM_setValue(`${this._settings.title}State`, `${val}`);
+        this._isVisible = val;
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+
+    get searchList(): NodeListOf<HTMLTableRowElement> {
+        if (this._searchList === undefined) {
+            throw new Error('searchlist is undefined');
+        }
+        return this._searchList;
+    }
+
+    get visible(): boolean {
+        return this._isVisible;
+    }
+
+    set visible(val: boolean) {
+        this._setVisState(val);
+    }
+}
+
+/**
+ * Remembers the state of ToggleBookmarked between page loads
+ */
+class StickyBookmarkedToggle implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Search,
+        type: 'checkbox',
+        title: 'stickyBookmarkedToggle',
+        desc: `Make bookmarked toggle state persist between page loads`,
+    };
+    private _tar: string = '#ssr';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['browse']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _init() {
+        console.log('[M+] Remembered bookmark visibility state!');
     }
 
     get settings(): CheckboxSetting {
