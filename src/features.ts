@@ -33,6 +33,7 @@ class InitFeatures {
         new StickySnatchedToggle();
         new PlaintextSearch();
         new ToggleSearchbox();
+        new FiletypeSearchFilter();
         new BuildTags();
         new RandomBook();
 
