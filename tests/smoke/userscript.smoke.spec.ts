@@ -172,6 +172,32 @@ test('shoutbox synthetic page previews a message through the site preview endpoi
     await expect(page.locator('#mp_shoutPreview')).toContainText('[i]Preview me[/i]');
 });
 
+test('shoutbox synthetic page shows the quick-edit hint and loads the newest editable shout with Ctrl+Up', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        quickEditShout: true,
+    });
+    await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#mp_quickEditShoutHint')).toContainText(
+        'Press Ctrl+Up to edit your last shout'
+    );
+
+    await page.locator('#shbox_text').press('Control+ArrowUp');
+    const editedId = await page.evaluate(() => {
+        return (
+            (window as Window & typeof globalThis & { __mpEditedShoutId?: string })
+                .__mpEditedShoutId || ''
+        );
+    });
+
+    expect(editedId).toBe('250');
+    await expect(page.locator('#sbEditOverlay')).not.toHaveClass(/hideMe/);
+});
+
 test('quick shout stays visible when the shoutbox enters fullscreen', async ({ page }) => {
     await installGMStubs(page, {
         mp_version: '4.4.2',

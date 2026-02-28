@@ -67,6 +67,7 @@ class InitFeatures {
         new PriorityStyle();
         new MutedUsers();
         new GiftButton();
+        new QuickEditShout();
         new ShoutPreview();
         new QuickShout();
 

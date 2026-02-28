@@ -218,6 +218,14 @@ This protects issue `#160`.
 
 This protects issue `#179`.
 
+`tests/unit/shout.quickEdit.test.ts`
+
+- verifies the quick-edit button calls the site's `editShout()` helper
+- verifies the shoutbox shows the quick-edit hint and that `Ctrl+Up` drives the site's existing shout menu/edit overlay flow for the newest editable shout
+- verifies the shortcut targets the newest editable shout, not just the first one found
+
+This protects issue `#131`.
+
 `tests/unit/browse.features.test.ts`
 
 - verifies bookmark icon override adds the `mp_bookmarkOverride` body class when enabled
@@ -284,6 +292,7 @@ Current smoke scenarios:
 - browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together
 - store page: unaffordable purchases are disabled while affordable ones remain enabled, and target-ratio upload credit guidance is displayed
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount
+- shoutbox page: the quick-edit controls open the newest editable shout through the site edit helper
 - shoutbox page: the preview button renders the current shout through the site preview endpoint
 - shoutbox fullscreen: QuickShout moves into the fullscreen overlay and back out when fullscreen is toggled
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
