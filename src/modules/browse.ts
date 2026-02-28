@@ -663,6 +663,232 @@ class ToggleSearchbox implements Feature {
 }
 
 /**
+ * Adds a filetype picker that writes MAM's @filetype filter into search text
+ */
+class FiletypeSearchFilter implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Search,
+        type: 'checkbox',
+        title: 'filetypeSearchFilter',
+        desc: `Add a filetype picker that inserts @filetype filters into search text`,
+    };
+    private _tar: string = '#torSearch';
+    private _queryTar: string = '#torTitle';
+    private _panelTar: string = '#mp_filetypeSearchPanel';
+    private _toggleTar: string = '#mp_filetypeSearchToggle';
+    private _defaultFiletypes: string[] = [
+        'epub',
+        'pdf',
+        'mobi',
+        'azw3',
+        'azw',
+        'txt',
+        'rtf',
+        'doc',
+        'docx',
+        'lit',
+        'djvu',
+        'cbz',
+        'cbr',
+        'cb7',
+        'm4b',
+        'mp3',
+        'm4a',
+        'flac',
+    ];
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['browse']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init(): Promise<void> {
+        const form: HTMLFormElement | null = document.querySelector(this._tar);
+        const queryInput: HTMLInputElement | null = document.querySelector(this._queryTar);
+        const anchorTarget: HTMLElement | null = document.querySelector('#resetNewIcon');
+
+        if (form === null || queryInput === null || anchorTarget === null) {
+            throw new Error('Could not initialize filetype search filter');
+        }
+
+        const allFiletypes: string[] = this._getAllFiletypes(queryInput.value);
+        const selectedFiletypes: Set<string> = new Set(this._parseFiletypes(queryInput.value));
+
+        const toggle: HTMLElement = await Util.createButton(
+            'filetypeSearchToggle',
+            'File Types',
+            'h1',
+            anchorTarget,
+            'afterend',
+            'torFormButton'
+        );
+
+        toggle.insertAdjacentHTML(
+            'afterend',
+            `
+                <div id="mp_filetypeSearchPanel" class="mp_filetypeSearchPanel" style="display: none;">
+                    <div class="mp_filetypeSearchActions">
+                        <span id="mp_filetypeSearchAll" class="mp_plainBtn" role="button">All</span>
+                        <span id="mp_filetypeSearchNone" class="mp_plainBtn" role="button">None</span>
+                    </div>
+                    <div class="mp_filetypeSearchGrid">
+                        ${allFiletypes
+                            .map((type) => {
+                                const checked = selectedFiletypes.has(type) ? 'checked' : '';
+                                return `<label class="mp_filetypeSearchItem"><input type="checkbox" value="${type}" ${checked}> ${type}</label>`;
+                            })
+                            .join('')}
+                    </div>
+                </div>
+            `
+        );
+
+        toggle.id = 'mp_filetypeSearchToggle';
+        toggle.addEventListener('click', () => {
+            this._togglePanel();
+        });
+
+        this._bindPanelActions(queryInput);
+        this._syncSelectionsFromQuery(queryInput);
+
+        queryInput.addEventListener('change', () => {
+            this._syncSelectionsFromQuery(queryInput);
+        });
+        queryInput.addEventListener('blur', () => {
+            this._syncSelectionsFromQuery(queryInput);
+        });
+        form.addEventListener('submit', () => {
+            this._applySelectionToQuery(queryInput);
+        });
+
+        console.log('[M+] Added the filetype search filter!');
+    }
+
+    private _bindPanelActions(queryInput: HTMLInputElement): void {
+        const panel: HTMLDivElement | null = document.querySelector(this._panelTar);
+        const selectAll: HTMLSpanElement | null = document.querySelector('#mp_filetypeSearchAll');
+        const selectNone: HTMLSpanElement | null = document.querySelector('#mp_filetypeSearchNone');
+
+        if (panel === null || selectAll === null || selectNone === null) {
+            throw new Error('Could not bind filetype search controls');
+        }
+
+        panel.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                this._applySelectionToQuery(queryInput);
+            });
+        });
+
+        selectAll.addEventListener('click', () => {
+            panel.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((box) => {
+                box.checked = true;
+            });
+            this._applySelectionToQuery(queryInput);
+        });
+
+        selectNone.addEventListener('click', () => {
+            panel.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((box) => {
+                box.checked = false;
+            });
+            this._applySelectionToQuery(queryInput);
+        });
+    }
+
+    private _togglePanel(): void {
+        const panel: HTMLDivElement | null = document.querySelector(this._panelTar);
+        const toggle: HTMLElement | null = document.querySelector(this._toggleTar);
+
+        if (panel === null || toggle === null) {
+            return;
+        }
+
+        const isOpen = panel.style.display === 'block';
+        panel.style.display = isOpen ? 'none' : 'block';
+        toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    }
+
+    private _syncSelectionsFromQuery(queryInput: HTMLInputElement): void {
+        const selectedFiletypes = new Set(this._parseFiletypes(queryInput.value));
+        const panel: HTMLDivElement | null = document.querySelector(this._panelTar);
+
+        if (panel === null) {
+            return;
+        }
+
+        panel.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((checkbox) => {
+            checkbox.checked = selectedFiletypes.has(checkbox.value);
+        });
+    }
+
+    private _applySelectionToQuery(queryInput: HTMLInputElement): void {
+        const panel: HTMLDivElement | null = document.querySelector(this._panelTar);
+
+        if (panel === null) {
+            return;
+        }
+
+        const selectedFiletypes: string[] = [];
+        panel.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((checkbox) => {
+            if (checkbox.checked) {
+                selectedFiletypes.push(checkbox.value);
+            }
+        });
+
+        const baseQuery = this._stripFiletypeToken(queryInput.value);
+        if (selectedFiletypes.length === 0) {
+            queryInput.value = baseQuery;
+        } else {
+            const filterToken = `@filetype{${selectedFiletypes.join('|')}}`;
+            queryInput.value = baseQuery === '' ? filterToken : `${baseQuery} ${filterToken}`;
+        }
+    }
+
+    private _getAllFiletypes(queryText: string): string[] {
+        const seen: { [key: string]: boolean } = {};
+        const merged: string[] = [];
+        const resultFiletypes = Array.from(
+            document.querySelectorAll<HTMLAnchorElement>('.torFileTypes a')
+        ).map((type) => type.textContent!.trim().toLowerCase());
+        const queryFiletypes = this._parseFiletypes(queryText);
+
+        [...this._defaultFiletypes, ...resultFiletypes, ...queryFiletypes].forEach((type) => {
+            if (type !== '' && seen[type] !== true) {
+                seen[type] = true;
+                merged.push(type);
+            }
+        });
+
+        return merged.sort();
+    }
+
+    private _parseFiletypes(queryText: string): string[] {
+        const match = queryText.match(/@filetype\{([^}]*)\}/i);
+        if (match === null || match[1].trim() === '') {
+            return [];
+        }
+
+        return match[1]
+            .split('|')
+            .map((type) => type.trim().toLowerCase())
+            .filter((type) => type !== '');
+    }
+
+    private _stripFiletypeToken(queryText: string): string {
+        return queryText
+            .replace(/\s*@filetype\{[^}]*\}\s*/gi, ' ')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
  * * Generates linked tags from the site's plaintext tag field
  */
 class BuildTags implements Feature {

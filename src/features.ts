@@ -36,6 +36,7 @@ class InitFeatures {
         new StickyBookmarkedToggle();
         new PlaintextSearch();
         new ToggleSearchbox();
+        new FiletypeSearchFilter();
         new BuildTags();
         new RandomBook();
 
