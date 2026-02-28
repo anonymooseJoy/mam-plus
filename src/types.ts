@@ -5,6 +5,7 @@
 type ValidPage =
     | 'home'
     | 'browse'
+    | 'freeleech'
     | 'request'
     | 'request details'
     | 'torrent'

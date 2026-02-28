@@ -36,6 +36,9 @@ class InitFeatures {
         new BuildTags();
         new RandomBook();
 
+        // Initialize Freeleech Page functions
+        new CollapseFreeleechSections();
+
         // Initialize Request Page functions
         new GoodreadsButtonReq();
         new ToggleHiddenRequesters();
