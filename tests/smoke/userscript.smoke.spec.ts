@@ -235,6 +235,40 @@ test('shoutbox synthetic page can open and save shoutbox settings in place', asy
     expect(storedValues.mutedUsersVal).toBe('gardenshade');
 });
 
+test('shoutbox synthetic page can add users to emphasize and block lists from the menu', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        priorityUsers: true,
+        priorityUsers_val: '222',
+        shoutMenuUserActions: true,
+    });
+    await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
+    await loadUserscript(page);
+
+    await page.locator('#sbid100 .sb_menu').click();
+    await expect(page.locator('#mp_sbEmphasize')).toContainText('Emphasize');
+    await expect(page.locator('#mp_sbMute')).toContainText('Block');
+
+    await page.locator('#mp_sbEmphasize').click();
+    await page.locator('#mp_sbMute').click();
+
+    const storedValues = await page.evaluate(() => {
+        return {
+            mutedUsers: GM_getValue('mutedUsers'),
+            mutedUsersVal: GM_getValue('mutedUsers_val'),
+            priorityUsers: GM_getValue('priorityUsers'),
+            priorityUsersVal: GM_getValue('priorityUsers_val'),
+        };
+    });
+
+    expect(storedValues.priorityUsers).toBe(true);
+    expect(storedValues.priorityUsersVal).toBe('222, 123');
+    expect(storedValues.mutedUsers).toBe(true);
+    expect(storedValues.mutedUsersVal).toBe('123');
+});
+
 test('quick shout stays visible when the shoutbox enters fullscreen', async ({ page }) => {
     await installGMStubs(page, {
         mp_version: '4.4.2',

@@ -471,6 +471,158 @@ class GiftButton implements Feature {
 }
 
 /**
+ * Adds emphasize/block shortcuts directly to the shoutbox dot menu.
+ */
+class ShoutMenuUserActions implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Shoutbox,
+        type: 'checkbox',
+        title: 'shoutMenuUserActions',
+        desc: `Add Emphasize and Block buttons to the shoutbox dot menu`,
+    };
+    private _tar: string = '.sbf';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['shoutbox', 'home']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _getStoredUsers(settingKey: string): string[] {
+        const storedValue: string | undefined = GM_getValue(`${settingKey}_val`);
+        if (!storedValue) {
+            return [];
+        }
+
+        return Util.csvToArray(storedValue).filter((entry) => entry !== '');
+    }
+
+    private _setStoredUsers(settingKey: string, values: string[]): void {
+        GM_setValue(settingKey, values.length > 0);
+        if (values.length > 0) {
+            GM_setValue(`${settingKey}_val`, values.join(', '));
+        }
+    }
+
+    private _addUser(settingKey: 'priorityUsers' | 'mutedUsers', userID: string): boolean {
+        const users = this._getStoredUsers(settingKey);
+        if (users.includes(userID)) {
+            return false;
+        }
+
+        users.push(userID);
+        this._setStoredUsers(settingKey, users);
+
+        const openSettingsInput = document.getElementById(settingKey) as HTMLInputElement | null;
+        if (openSettingsInput) {
+            openSettingsInput.value = users.join(', ');
+        }
+
+        return true;
+    }
+
+    private _showStatus(message: string, success: boolean): void {
+        const shoutboxBody = <HTMLElement | null>document.getElementById('sbf');
+        if (!shoutboxBody) {
+            return;
+        }
+
+        let status = document.getElementById('mp_shoutMenuActionStatus');
+        if (!status) {
+            status = document.createElement('div');
+            status.id = 'mp_shoutMenuActionStatus';
+            shoutboxBody.appendChild(status);
+        }
+
+        status.textContent = message;
+        status.className = success ? 'mp_success' : 'mp_fail';
+    }
+
+    private async _init() {
+        console.log(`[M+] Adding shoutbox menu user actions...`);
+
+        const sbfDiv = <HTMLDivElement | null>document.getElementById('sbf');
+        if (!sbfDiv) {
+            return;
+        }
+
+        sbfDiv.addEventListener('click', async (e) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.sb_menu')) {
+                return;
+            }
+
+            const popupMenu = <HTMLElement | null>document.getElementById('sbMenuMain');
+            if (!popupMenu) {
+                return;
+            }
+
+            do {
+                await Util.sleep(5);
+            } while (!popupMenu.hasChildNodes());
+
+            const popupUser = popupMenu.firstElementChild as HTMLElement | null;
+            const userID = popupUser?.getAttribute('data-uid');
+            if (!popupUser || !userID || popupUser.querySelector('#mp_sbEmphasize')) {
+                return;
+            }
+
+            const emphasizeButton = document.createElement('li');
+            emphasizeButton.id = 'mp_sbEmphasize';
+            emphasizeButton.textContent = this._getStoredUsers('priorityUsers').includes(userID)
+                ? 'Emphasized'
+                : 'Emphasize';
+
+            const muteButton = document.createElement('li');
+            muteButton.id = 'mp_sbMute';
+            muteButton.textContent = this._getStoredUsers('mutedUsers').includes(userID)
+                ? 'Blocked'
+                : 'Block';
+
+            popupUser.appendChild(emphasizeButton);
+            popupUser.appendChild(muteButton);
+        });
+
+        const shoutbox = <HTMLElement | null>document.getElementById('shoutbox');
+        shoutbox?.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const popupUser = target.closest('#sbMenuMain > ul') as HTMLElement | null;
+            const userID = popupUser?.getAttribute('data-uid');
+
+            if (!popupUser || !userID) {
+                return;
+            }
+
+            if (target.id === 'mp_sbEmphasize') {
+                const added = this._addUser('priorityUsers', userID);
+                target.textContent = 'Emphasized';
+                this._showStatus(
+                    added
+                        ? `Added user ${userID} to the emphasize list`
+                        : `User ${userID} is already emphasized`,
+                    added
+                );
+            } else if (target.id === 'mp_sbMute') {
+                const added = this._addUser('mutedUsers', userID);
+                target.textContent = 'Blocked';
+                this._showStatus(
+                    added
+                        ? `Added user ${userID} to the block list`
+                        : `User ${userID} is already blocked`,
+                    added
+                );
+            }
+        });
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
  * Creates feature for building a library of quick shout items that can act as a copy/paste replacement.
  */
 class QuickShout implements Feature {
