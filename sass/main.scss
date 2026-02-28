@@ -215,6 +215,44 @@ a[id^='torDeBookmark'] {
 .mp_store_disabled_section {
     opacity: 0.7;
 }
+.mp_fl_toolbar {
+    margin: 0 0 15px;
+}
+.mp_fl_toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+.mp_fl_toc_item {
+    display: inline-block;
+    padding: 2px 6px;
+    margin: 0 6px 6px 0;
+    text-decoration: none;
+    white-space: nowrap;
+
+    .mp_dark & {
+        border: $dark-btnBorder;
+        color: $dark-btnColor;
+        background-image: $dark-btnBack;
+    }
+
+    .mp_light & {
+        border: $light-btnBorder;
+        color: $light-btnColor;
+        background-image: $light-btnBack;
+    }
+}
+.mp_fl_section {
+    scroll-margin-top: 80px;
+}
+.mp_fl_toggle {
+    display: inline-block;
+    margin-left: 8px;
+}
+.mp_fl_section_body {
+    padding-top: 6px;
+}
 .mp_tags {
     display: block;
     padding: 0.8rem 0;

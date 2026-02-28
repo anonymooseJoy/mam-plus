@@ -3,6 +3,7 @@
 /// <reference path="./modules/core.ts" />
 /// <reference path="./modules/global.ts" />
 /// <reference path="./modules/browse.ts" />
+/// <reference path="./modules/freeleech.ts" />
 /// <reference path="./modules/forum.ts" />
 /// <reference path="./modules/home.ts" />
 /// <reference path="./modules/request.ts" />

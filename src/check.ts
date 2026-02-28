@@ -168,6 +168,7 @@ class Check {
                     shoutbox: () => 'shoutbox',
                     preferences: () => 'settings',
                     store: () => 'store',
+                    freeleech: () => 'freeleech',
                     millionaires: () => 'vault',
                     t: () => 'torrent',
                     u: () => 'user',
