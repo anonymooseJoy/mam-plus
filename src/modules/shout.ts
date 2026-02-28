@@ -874,3 +874,155 @@ class QuickShout implements Feature {
         return this._settings;
     }
 }
+
+/**
+ * Adds a shoutbox preview that uses the site's own preview endpoint.
+ */
+class ShoutPreview implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Shoutbox,
+        type: 'checkbox',
+        title: 'shoutPreview',
+        desc: `Adds a Preview button for shoutbox messages.`,
+    };
+    private _tar: string = '#sbform';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['shoutbox', 'home']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init() {
+        console.log(`[M+] Adding Shoutbox Preview...`);
+
+        const shoutForm = <HTMLElement | null>document.getElementById('sbform');
+        const shoutInput = <HTMLInputElement | null>document.getElementById('shbox_text');
+        const shoutNotifs = <HTMLElement | null>document.getElementById('sbNotifs');
+        const shoutBox = <HTMLElement | null>document.getElementById('shoutbox');
+        const shoutBody = <HTMLElement | null>document.getElementById('sbf');
+        const shoutTabs = <HTMLElement | null>document.getElementById('sbMenuTabs');
+        const previewButton = document.createElement('button');
+        const previewRoot = document.createElement('div');
+        const previewBody = document.createElement('div');
+        let isLoadingPreview = false;
+
+        if (!shoutForm || !shoutInput || !shoutNotifs) {
+            return;
+        }
+
+        const syncFullscreenBodyHeight = () => {
+            if (
+                !shoutBox ||
+                !shoutBody ||
+                !shoutForm ||
+                !shoutNotifs ||
+                !shoutTabs ||
+                shoutBox.style.position !== 'fixed'
+            ) {
+                if (shoutBody) {
+                    shoutBody.style.height = '';
+                }
+                return;
+            }
+
+            const extraHeight = shoutBody.offsetHeight - shoutBody.clientHeight;
+            const fullHeight =
+                shoutBox.clientHeight -
+                shoutForm.offsetHeight -
+                shoutNotifs.offsetHeight -
+                (previewRoot.style.display !== 'none' ? previewRoot.offsetHeight : 0) -
+                shoutTabs.offsetHeight -
+                extraHeight;
+            shoutBody.style.height = `${Math.max(fullHeight, 0)}px`;
+        };
+
+        previewButton.id = 'mp_shoutPreviewBtn';
+        previewButton.type = 'button';
+        previewButton.textContent = 'Preview';
+        previewButton.style.marginLeft = '5px';
+
+        previewRoot.id = 'mp_shoutPreview';
+        previewRoot.className = 'mp_shoutPreview';
+        previewRoot.style.display = 'none';
+        previewRoot.innerHTML = `<div class="mp_shoutPreviewHeader">Preview</div>`;
+
+        previewBody.className = 'mp_shoutPreviewBody';
+        previewRoot.appendChild(previewBody);
+
+        const setPreviewState = (message: string, stateClass?: string) => {
+            previewBody.className = 'mp_shoutPreviewBody';
+            if (stateClass) {
+                previewBody.classList.add(stateClass);
+            }
+            previewBody.innerHTML = message;
+            previewRoot.style.display = '';
+            syncFullscreenBodyHeight();
+        };
+
+        previewButton.addEventListener('click', async () => {
+            const previewText = shoutInput.value.trim();
+            if (!previewText || isLoadingPreview) {
+                return;
+            }
+
+            isLoadingPreview = true;
+            previewButton.disabled = true;
+            setPreviewState('Loading preview...', 'mp_shoutPreview_loading');
+
+            try {
+                const previewResp = await fetch('/jsonPostTest.php', {
+                    body: new URLSearchParams({
+                        messageToTest: shoutInput.value,
+                    }).toString(),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    },
+                    method: 'POST',
+                });
+                const previewJson = await previewResp.json();
+
+                if (previewJson.Error) {
+                    setPreviewState(previewJson.Error, 'mp_shoutPreview_error');
+                } else {
+                    setPreviewState(previewJson.message || '', 'mp_shoutPreview_rendered');
+                }
+            } catch (_error) {
+                setPreviewState('Preview failed to load.', 'mp_shoutPreview_error');
+            } finally {
+                isLoadingPreview = false;
+                previewButton.disabled = !shoutInput.value.trim();
+            }
+        });
+
+        shoutInput.addEventListener('input', () => {
+            previewButton.disabled = !shoutInput.value.trim();
+
+            if (previewRoot.style.display !== 'none') {
+                previewBody.className = 'mp_shoutPreviewBody mp_shoutPreview_stale';
+                previewBody.textContent = 'Preview is out of date. Click Preview again.';
+                syncFullscreenBodyHeight();
+            }
+        });
+
+        previewButton.disabled = !shoutInput.value.trim();
+
+        shoutForm.appendChild(previewButton);
+        shoutNotifs.insertAdjacentElement('afterend', previewRoot);
+
+        if (shoutBox) {
+            new MutationObserver(() => {
+                syncFullscreenBodyHeight();
+            }).observe(shoutBox, {
+                attributeFilter: ['class', 'style'],
+                attributes: true,
+            });
+        }
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}

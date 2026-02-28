@@ -211,6 +211,13 @@ This protects issue `#187`.
 
 This protects issue `#160`.
 
+`tests/unit/shout.preview.test.ts`
+
+- verifies the shoutbox preview button calls the site's preview endpoint
+- verifies the returned HTML is inserted into the shout preview pane
+
+This protects issue `#179`.
+
 `tests/unit/browse.features.test.ts`
 
 - verifies bookmark icon override adds the `mp_bookmarkOverride` body class when enabled
@@ -277,6 +284,7 @@ Current smoke scenarios:
 - browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together
 - store page: unaffordable purchases are disabled while affordable ones remain enabled, and target-ratio upload credit guidance is displayed
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount
+- shoutbox page: the preview button renders the current shout through the site preview endpoint
 - shoutbox fullscreen: QuickShout moves into the fullscreen overlay and back out when fullscreen is toggled
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
 - vault page: stale donation history is replaced even without a donate form

@@ -67,6 +67,7 @@ class InitFeatures {
         new PriorityStyle();
         new MutedUsers();
         new GiftButton();
+        new ShoutPreview();
         new QuickShout();
 
         // Initialize Vault functions

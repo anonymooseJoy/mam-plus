@@ -143,6 +143,35 @@ test('shoutbox synthetic page retries gift with a lower amount', async ({ page }
     expect(requestedAmounts).toEqual(['500', '125']);
 });
 
+test('shoutbox synthetic page previews a message through the site preview endpoint', async ({
+    page,
+}) => {
+    await page.route('https://www.myanonamouse.net/jsonPostTest.php', async (route) => {
+        const body = route.request().postData() || '';
+
+        await route.fulfill({
+            body: JSON.stringify({
+                message: `<strong>Rendered:</strong> ${decodeURIComponent(body.split('=')[1] || '')}`,
+            }),
+            contentType: 'application/json; charset=utf-8',
+        });
+    });
+
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        shoutPreview: true,
+    });
+    await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
+    await loadUserscript(page);
+
+    await page.locator('#shbox_text').fill('[i]Preview me[/i]');
+    await page.locator('#mp_shoutPreviewBtn').click();
+
+    await expect(page.locator('#mp_shoutPreview')).toBeVisible();
+    await expect(page.locator('#mp_shoutPreview')).toContainText('Rendered:');
+    await expect(page.locator('#mp_shoutPreview')).toContainText('[i]Preview me[/i]');
+});
+
 test('quick shout stays visible when the shoutbox enters fullscreen', async ({ page }) => {
     await installGMStubs(page, {
         mp_version: '4.4.2',

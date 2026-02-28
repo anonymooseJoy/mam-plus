@@ -353,6 +353,36 @@ a[class^='mp_mark_'] {
         background: #cc3300;
     }
 }
+.mp_shoutPreview {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid;
+    text-align: left;
+
+    .mp_dark & {
+        background: rgba(0, 0, 0, 0.25);
+        border-color: #5c5c5c;
+    }
+
+    .mp_light & {
+        background: rgba(255, 255, 255, 0.75);
+        border-color: #d0d0d0;
+    }
+}
+.mp_shoutPreviewHeader {
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+.mp_shoutPreviewBody {
+    overflow-wrap: break-word;
+}
+.mp_shoutPreview_stale {
+    font-style: italic;
+    opacity: 0.8;
+}
+.mp_shoutPreview_error {
+    color: #cc3300;
+}
 .mp_blurredBack {
     position: relative;
     z-index: 1;
