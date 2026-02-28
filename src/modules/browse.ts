@@ -563,6 +563,226 @@ class BuildTags implements Feature {
 }
 
 /**
+ * Adds multi-select checkboxes and bulk actions to browse results
+ */
+class MultiSelectBrowse implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Search,
+        type: 'checkbox',
+        title: 'multiSelectBrowse',
+        desc: `Add checkboxes and bulk actions to search results`,
+    };
+    private _tar: string = '#ssr';
+    private _share: Shared = new Shared();
+    private _toolbarID: string = 'mp_multiSelectToolbar';
+    private _checkboxClass: string = 'mp_multiSelectBox';
+    private _rowFlag: string = 'mpMultiSelectReady';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['browse']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init(): Promise<void> {
+        this._ensureToolbar();
+        this._decorateResults(await this._share.getSearchList());
+
+        Check.elemObserver('#ssr', async () => {
+            this._ensureToolbar();
+            this._decorateResults(await this._share.getSearchList());
+        });
+        Check.elemObserver(
+            'body',
+            () => {
+                this._ensureToolbar();
+            },
+            {
+                childList: true,
+                subtree: true,
+            }
+        );
+
+        console.log('[M+] Added multi-select browse actions!');
+    }
+
+    private _ensureToolbar(): void {
+        const existingToolbar: HTMLElement | null = document.getElementById(this._toolbarID);
+        const massActions: HTMLElement | null = this._findMassActionsAnchor();
+        if (existingToolbar !== null) {
+            if (
+                massActions !== null &&
+                existingToolbar.parentElement !== massActions
+            ) {
+                existingToolbar.className =
+                    'mp_multiSelectToolbar mp_multiSelectToolbar_massActions';
+                massActions.classList.add('mp_multiSelectHost');
+                massActions.appendChild(existingToolbar);
+            }
+            return;
+        }
+
+        const toolbar = document.createElement('div');
+        toolbar.id = this._toolbarID;
+        toolbar.className = massActions
+            ? 'mp_multiSelectToolbar mp_multiSelectToolbar_massActions'
+            : 'mp_multiSelectToolbar';
+        toolbar.innerHTML = `
+            <span id="mp_multiSelectAll" class="mp_plainBtn" role="button">Select All</span>
+            <span id="mp_multiSelectNone" class="mp_plainBtn" role="button">Select None</span>
+            <span id="mp_multiSelectOpen" class="mp_plainBtn" role="button">Open Selected</span>
+            <span id="mp_multiSelectDownload" class="mp_plainBtn" role="button">Download Selected</span>
+            <span id="mp_multiSelectBookmark" class="mp_plainBtn" role="button">Bookmark Selected</span>
+        `;
+
+        if (massActions !== null) {
+            massActions.classList.add('mp_multiSelectHost');
+            massActions.appendChild(toolbar);
+        } else {
+            const anchorTarget: HTMLElement | null =
+                document.querySelector('#resetNewIcon') || document.querySelector('#ssr');
+            if (anchorTarget === null || anchorTarget.parentElement === null) {
+                throw new Error('Could not create multi-select browse toolbar');
+            }
+            anchorTarget.insertAdjacentElement('beforebegin', toolbar);
+        }
+
+        (<HTMLElement>document.getElementById('mp_multiSelectAll')).addEventListener(
+            'click',
+            () => {
+                this._setCheckedState(true);
+            }
+        );
+        (<HTMLElement>document.getElementById('mp_multiSelectNone')).addEventListener(
+            'click',
+            () => {
+                this._setCheckedState(false);
+            }
+        );
+        (<HTMLElement>document.getElementById('mp_multiSelectOpen')).addEventListener(
+            'click',
+            () => {
+                this._openSelected();
+            }
+        );
+        (<HTMLElement>document.getElementById('mp_multiSelectDownload')).addEventListener(
+            'click',
+            () => {
+                this._downloadSelected();
+            }
+        );
+        (<HTMLElement>document.getElementById('mp_multiSelectBookmark')).addEventListener(
+            'click',
+            () => {
+                this._bookmarkSelected();
+            }
+        );
+    }
+
+    private _decorateResults(results: NodeListOf<HTMLTableRowElement>): void {
+        results.forEach((result) => {
+            if (result.dataset[this._rowFlag] === 'true') {
+                return;
+            }
+
+            const firstCell: HTMLTableCellElement | null = result.querySelector('td');
+            if (firstCell === null) {
+                return;
+            }
+
+            const boxWrap = document.createElement('span');
+            boxWrap.className = 'mp_multiSelectWrap';
+            boxWrap.innerHTML = `<input type="checkbox" class="${this._checkboxClass}" aria-label="Select search result">`;
+            firstCell.insertBefore(boxWrap, firstCell.firstChild);
+            result.dataset[this._rowFlag] = 'true';
+        });
+    }
+
+    private _selectedResults(): HTMLTableRowElement[] {
+        return Array.from(document.querySelectorAll('#ssr tr[id ^= "tdr"]')).filter(
+            (row) => {
+                const box = row.querySelector(`.${this._checkboxClass}`) as HTMLInputElement | null;
+                return box !== null && box.checked;
+            }
+        ) as HTMLTableRowElement[];
+    }
+
+    private _setCheckedState(checked: boolean): void {
+        document
+            .querySelectorAll(`#ssr .${this._checkboxClass}`)
+            .forEach((box) => ((<HTMLInputElement>box).checked = checked));
+    }
+
+    private _openSelected(): void {
+        this._selectedResults().forEach((row) => {
+            const rowID = row.id.match(/^tdr-?(\d+)$/);
+            const targetURL =
+                rowID !== null
+                    ? `${window.location.origin}/t/${rowID[1]}`
+                    : (row.querySelector('.torTitle') as HTMLAnchorElement | null)?.href;
+
+            if (targetURL) {
+                window.open(targetURL, '_blank');
+            }
+        });
+    }
+
+    private _downloadSelected(): void {
+        this._selectedResults().forEach((row) => {
+            const downloadLink = row.querySelector('.directDownload') as HTMLAnchorElement | null;
+            if (downloadLink !== null) {
+                downloadLink.click();
+            }
+        });
+    }
+
+    private _bookmarkSelected(): void {
+        this._selectedResults().forEach((row) => {
+            const bookmarkLink = row.querySelector(
+                'a[id^="torBookmark"]'
+            ) as HTMLAnchorElement | null;
+            if (bookmarkLink !== null) {
+                bookmarkLink.click();
+            }
+        });
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+
+    private _findMassActionsAnchor(): HTMLElement | null {
+        const massActions = document.querySelector('#massActions') as HTMLElement | null;
+        if (massActions !== null) {
+            return massActions;
+        }
+
+        const bookmarkActions = document.querySelector('#bookmarkActions') as HTMLElement | null;
+        if (bookmarkActions !== null) {
+            return bookmarkActions;
+        }
+
+        const massActionButton = document.querySelector(
+            'button[data-bmType]'
+        ) as HTMLButtonElement | null;
+        if (massActionButton !== null && massActionButton.parentElement !== null) {
+            return massActionButton.parentElement;
+        }
+
+        const massActionsLabel = Array.from(document.querySelectorAll('h1, h2, h3, h4, strong')).find(
+            (elem) => elem.textContent?.trim().toLowerCase() === 'mass actions'
+        ) as HTMLElement | undefined;
+        if (massActionsLabel) {
+            return massActionsLabel.parentElement as HTMLElement | null;
+        }
+
+        return null;
+    }
+}
+
+/**
  * Random Book feature to open a new tab/window with a random MAM Book
  */
 class RandomBook implements Feature {

@@ -34,6 +34,7 @@ class InitFeatures {
         new PlaintextSearch();
         new ToggleSearchbox();
         new BuildTags();
+        new MultiSelectBrowse();
         new RandomBook();
 
         // Initialize Request Page functions

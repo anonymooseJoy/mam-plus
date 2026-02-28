@@ -193,6 +193,34 @@ a[id^='torDeBookmark'] {
     width: 100%;
     height: 175px;
 }
+.mp_multiSelectToolbar {
+    margin-bottom: 8px;
+}
+.mp_multiSelectToolbar_massActions {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: top;
+    margin-left: 12px;
+
+    .mp_plainBtn {
+        margin-bottom: 4px;
+        margin-right: 0;
+        text-align: center;
+    }
+}
+.mp_multiSelectHost {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.mp_multiSelectWrap {
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: top;
+}
+.mp_multiSelectBox {
+    margin: 0 4px 0 0;
+}
 
 .mp_muted {
     transition: all 0.1s;
