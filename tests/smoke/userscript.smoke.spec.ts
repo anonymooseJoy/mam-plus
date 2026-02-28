@@ -143,6 +143,33 @@ test('shoutbox synthetic page retries gift with a lower amount', async ({ page }
     expect(requestedAmounts).toEqual(['500', '125']);
 });
 
+test('quick shout stays visible when the shoutbox enters fullscreen', async ({ page }) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        quickShout: true,
+    });
+    await loadFixturePage(page, '/', 'tests/fixtures/quick-shout.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#fpShout > #mp_blockFoot')).toBeVisible();
+
+    await page.evaluate(() => {
+        const shoutbox = document.getElementById('shoutbox') as HTMLElement;
+        shoutbox.style.position = 'fixed';
+        shoutbox.style.inset = '0px';
+    });
+
+    await expect(page.locator('#sbNotifs > #mp_quickShoutRoot')).toBeVisible();
+
+    await page.evaluate(() => {
+        const shoutbox = document.getElementById('shoutbox') as HTMLElement;
+        shoutbox.style.position = '';
+        shoutbox.style.inset = '';
+    });
+
+    await expect(page.locator('#fpShout > #mp_blockFoot')).toBeVisible();
+});
+
 test('torrent synthetic page keeps Currently Reading as a plain textarea', async ({
     page,
 }) => {
