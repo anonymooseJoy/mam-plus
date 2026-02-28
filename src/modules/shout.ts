@@ -500,11 +500,78 @@ class QuickShout implements Feature {
         );
         //get Shoutbox DIV
         const shoutBox = document.getElementById('fpShout');
-        //get the footer where we will insert our feature
-        const shoutFoot = <HTMLElement>shoutBox!.querySelector('.blockFoot');
-        //give it an ID and set the size
-        shoutFoot!.setAttribute('id', 'mp_blockFoot');
-        shoutFoot!.style.height = '2.5em';
+        const shoutboxPanel = <HTMLElement>document.getElementById('shoutbox');
+        const shoutboxNotifs = <HTMLElement | null>document.getElementById('sbNotifs');
+        const shoutboxBody = <HTMLElement | null>document.getElementById('sbf');
+        const shoutboxTabs = <HTMLElement | null>document.getElementById('sbMenuTabs');
+        const shoutboxForm = <HTMLElement | null>document.getElementById('sbform');
+        //get the default footer where we will insert our feature
+        const defaultShoutFoot = <HTMLElement>shoutBox!.querySelector('.blockFoot');
+        const quickShoutFootId = 'mp_blockFoot';
+        let isQuickShoutExpanded = false;
+
+        const quickShoutRoot = document.createElement('div');
+        quickShoutRoot.id = 'mp_quickShoutRoot';
+
+        const isFullscreenShoutbox = () => {
+            if (!shoutboxPanel) {
+                return false;
+            }
+
+            return shoutboxPanel.style.position === 'fixed';
+        };
+
+        const syncFullscreenBodyHeight = () => {
+            if (
+                !isFullscreenShoutbox() ||
+                !shoutboxPanel ||
+                !shoutboxBody ||
+                !shoutboxForm ||
+                !shoutboxNotifs ||
+                !shoutboxTabs
+            ) {
+                if (shoutboxBody) {
+                    shoutboxBody.style.height = '';
+                }
+                return;
+            }
+
+            const extraHeight = shoutboxBody.offsetHeight - shoutboxBody.clientHeight;
+            const fullHeight =
+                shoutboxPanel.clientHeight -
+                shoutboxForm.offsetHeight -
+                shoutboxNotifs.offsetHeight -
+                shoutboxTabs.offsetHeight -
+                extraHeight;
+            shoutboxBody.style.height = `${Math.max(fullHeight, 0)}px`;
+        };
+
+        const syncQuickShoutFoot = () => {
+            const targetFoot =
+                isFullscreenShoutbox() && shoutboxNotifs ? shoutboxNotifs : defaultShoutFoot;
+
+            if (quickShoutRoot.parentElement !== targetFoot) {
+                targetFoot.appendChild(quickShoutRoot);
+            }
+            defaultShoutFoot.id = targetFoot === defaultShoutFoot ? quickShoutFootId : '';
+            defaultShoutFoot.style.height =
+                targetFoot === defaultShoutFoot ? (isQuickShoutExpanded ? '11em' : '2.5em') : '';
+            syncFullscreenBodyHeight();
+        };
+
+        const setQuickShoutExpanded = (expanded: boolean) => {
+            isQuickShoutExpanded = expanded;
+            syncQuickShoutFoot();
+        };
+
+        if (shoutboxPanel) {
+            new MutationObserver(() => {
+                syncQuickShoutFoot();
+            }).observe(shoutboxPanel, {
+                attributeFilter: ['class', 'style'],
+                attributes: true,
+            });
+        }
         //create a new dive to hold our comboBox and buttons and set the style for formatting
         const comboBoxDiv = document.createElement('div');
         comboBoxDiv.style.float = 'left';
@@ -711,7 +778,7 @@ class QuickShout implements Feature {
                         //hide the text area
                         quickShoutText.style.display = 'none';
                         //shrink the footer
-                        shoutFoot!.style.height = '2.5em';
+                        setQuickShoutExpanded(false);
                         //re-style the save button to default
                         saveButton.style.backgroundColor = '';
                         saveButton.style.color = '';
@@ -730,7 +797,7 @@ class QuickShout implements Feature {
                     //show the text area for input
                     quickShoutText.style.display = '';
                     //expand the footer to accomodate all feature aspects
-                    shoutFoot!.style.height = '11em';
+                    setQuickShoutExpanded(true);
                     //if what is in the input field is a saved entry key
                     if (jsonList[inputVal]) {
                         //this can be a sucky line of code because it can wipe out unsaved data, but i cannot think of better way
@@ -798,8 +865,9 @@ class QuickShout implements Feature {
             false
         );
         //add the combobox and text area elements to the footer
-        shoutFoot.appendChild(comboBoxDiv);
-        shoutFoot.appendChild(quickShoutText);
+        quickShoutRoot.appendChild(comboBoxDiv);
+        quickShoutRoot.appendChild(quickShoutText);
+        syncQuickShoutFoot();
     }
 
     get settings(): CheckboxSetting {
