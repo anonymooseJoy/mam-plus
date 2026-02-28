@@ -10,6 +10,8 @@ class GiftNewest implements Feature {
         desc: `Add buttons to Gift/Open all newest members`,
     };
     private _tar: string = '#mainTable';
+    private _giftedStoreKey: string = 'mp_lastNewGifted';
+    private _giftedStoreLimit: number = 500;
 
     constructor() {
         Util.startFeature(this._settings, this._tar, ['home', 'new users']).then((t) => {
@@ -40,6 +42,7 @@ class GiftNewest implements Feature {
     private async _homePageGifting() {
         //ensure gifted list is under 500 member names long
         this._trimGiftList();
+        const giftedUsers = new Set(this._getGiftedUsers());
         //get the FrontPage NewMembers element containing newest 10 members
         const fpNM = <HTMLDivElement>document.querySelector('#fpNM');
         const members: HTMLAnchorElement[] = Array.prototype.slice.call(
@@ -50,10 +53,8 @@ class GiftNewest implements Feature {
             //add a class to the existing element for use in reference in creating buttons
             member.setAttribute('class', `mp_refPoint_${Util.endOfHref(member)}`);
             //if the member has been gifted through this feature previously
-            if (GM_getValue('mp_lastNewGifted').indexOf(Util.endOfHref(member)) >= 0) {
-                //add checked box to text
-                member.innerText = `${member.innerText} ✅`;
-                member.classList.add('mp_gifted');
+            if (giftedUsers.has(Util.endOfHref(member))) {
+                this._markMemberGifted(member);
             }
         });
         //get the default value of gifts set in preferences for user page
@@ -121,16 +122,8 @@ class GiftNewest implements Feature {
                         if (MP.DEBUG) console.log('Gift Result', jsonResult);
                         //if gift was successfully sent
                         if (JSON.parse(jsonResult).success) {
-                            //check off box
-                            member.innerText = `${member.innerText} \u2611`;
-                            member.classList.add('mp_gifted');
-                            //add member to the stored member list
-                            GM_setValue(
-                                'mp_lastNewGifted',
-                                `${Util.endOfHref(member)},${GM_getValue(
-                                    'mp_lastNewGifted'
-                                )}`
-                            );
+                            this._markMemberGifted(member);
+                            this._storeGiftedMember(Util.endOfHref(member));
                         } else if (!JSON.parse(jsonResult).success) {
                             console.warn(JSON.parse(jsonResult).error);
                         }
@@ -215,23 +208,21 @@ class GiftNewest implements Feature {
     private async _newUsersPageGifting() {
         // Ensure the gifted list is under 500 members
         this._trimGiftList();
+        const giftedUsers = new Set(this._getGiftedUsers());
 
         // Select the container holding the newest members
         const fpNM = document.querySelector('.blockCon') as HTMLDivElement;
         const footer = document.querySelector('.blockFoot') as HTMLDivElement;
-        const memberLabels = Array.from(fpNM.querySelectorAll('label'));
+        const memberLabels = this._getNewUsersMembers(fpNM);
 
         // Loop through each member and check if they were previously gifted
-        memberLabels.forEach((label) => {
-            const member = label.querySelector('a') as HTMLAnchorElement;
-            const checkbox = label.querySelector('input[type="checkbox"]') as HTMLInputElement;
+        memberLabels.forEach(({ member }) => {
             const memberRef = `mp_refPoint_${Util.endOfHref(member)}`;
             member.classList.add(memberRef);
 
             // If the member has already been gifted, update the display
-            if (GM_getValue('mp_lastNewGifted').includes(Util.endOfHref(member))) {
-                member.innerText += ' ✅';
-                member.classList.add('mp_gifted');
+            if (giftedUsers.has(Util.endOfHref(member))) {
+                this._markMemberGifted(member);
             }
         });
 
@@ -269,10 +260,7 @@ class GiftNewest implements Feature {
             let firstCall = true;
             const giftAmount = (document.getElementById('mp_giftAmounts') as HTMLInputElement).value;
 
-            for (const label of memberLabels) {
-                const member = label.querySelector('a') as HTMLAnchorElement;
-                const checkbox = label.querySelector('input[type="checkbox"]') as HTMLInputElement;
-
+            for (const { member, checkbox } of memberLabels) {
                 if (checkbox.checked && !member.classList.contains('mp_gifted')) {
                     const userName = member.innerText;
                     const url = `https://www.myanonamouse.net/json/bonusBuy.php?spendtype=gift&amount=${giftAmount}&giftTo=${userName}`;
@@ -284,9 +272,8 @@ class GiftNewest implements Feature {
                     if (MP.DEBUG) console.log('Gift Result', jsonResult);
 
                     if (JSON.parse(jsonResult).success) {
-                        member.innerText += ' ✅';
-                        member.classList.add('mp_gifted');
-                        GM_setValue('mp_lastNewGifted', `${Util.endOfHref(member)},${GM_getValue('mp_lastNewGifted')}`);
+                        this._markMemberGifted(member);
+                        this._storeGiftedMember(Util.endOfHref(member));
                     } else {
                         console.warn(JSON.parse(jsonResult).error);
                     }
@@ -322,9 +309,7 @@ class GiftNewest implements Feature {
         );
         openAllBtn.title = 'Open a new tab for each ungifted member';
         openAllBtn.addEventListener('click', () => {
-            for (const label of memberLabels) {
-                const member = label.querySelector('a') as HTMLAnchorElement;
-                const checkbox = label.querySelector('input[type="checkbox"]') as HTMLInputElement;
+            for (const { member, checkbox } of memberLabels) {
                 if (checkbox.checked && !member.classList.contains('mp_gifted')) {
                     window.open(member.href, '_blank');
                 }
@@ -366,10 +351,7 @@ class GiftNewest implements Feature {
         selectUngiftedBtn.title = 'Select the first 100 ungifted users';
         selectUngiftedBtn.addEventListener('click', () => {
             let count = 0;
-            for (const label of memberLabels) {
-                const member = label.querySelector('a') as HTMLAnchorElement;
-                const checkbox = label.querySelector('input[type="checkbox"]') as HTMLInputElement;
-
+            for (const { member, checkbox } of memberLabels) {
                 // Check if the member is not gifted and if the checkbox is not yet selected
                 if (!member.classList.contains('mp_gifted') && !checkbox.checked) {
                     checkbox.checked = true;  // Select the checkbox
@@ -398,27 +380,69 @@ class GiftNewest implements Feature {
      * * Trims the gifted list to last 500 names to avoid getting too large over time.
      */
     private _trimGiftList() {
-        //if value exists in GM
-        if (GM_getValue('mp_lastNewGifted')) {
-            //GM value is a comma delim value, split value into array of names
-            const giftNames = GM_getValue('mp_lastNewGifted').split(',');
-            let newGiftNames: string = '';
-            if (giftNames.length > 500) {
-                for (const giftName of giftNames) {
-                    if (giftNames.indexOf(giftName) <= 499) {
-                        //rebuild a comma delim string out of the first 49 names
-                        newGiftNames = newGiftNames + giftName + ',';
-                        //set new string in GM
-                        GM_setValue('mp_lastNewGifted', newGiftNames);
-                    } else {
-                        break;
-                    }
-                }
-            }
-        } else {
-            //set value if doesnt exist
-            GM_setValue('mp_lastNewGifted', '');
+        this._setGiftedUsers(this._getGiftedUsers());
+    }
+
+    private _getGiftedUsers(): string[] {
+        const storedGiftedUsers: string | undefined = GM_getValue(this._giftedStoreKey);
+
+        if (storedGiftedUsers === undefined || storedGiftedUsers === '') {
+            return [];
         }
+
+        return storedGiftedUsers
+            .split(',')
+            .map((giftedUser) => giftedUser.trim())
+            .filter((giftedUser, index, allGiftedUsers) => {
+                return giftedUser !== '' && allGiftedUsers.indexOf(giftedUser) === index;
+            });
+    }
+
+    private _setGiftedUsers(giftedUsers: string[]): void {
+        GM_setValue(
+            this._giftedStoreKey,
+            giftedUsers.slice(0, this._giftedStoreLimit).join(',')
+        );
+    }
+
+    private _storeGiftedMember(memberID: string): void {
+        const giftedUsers = this._getGiftedUsers().filter(
+            (giftedUser) => giftedUser !== memberID
+        );
+        giftedUsers.unshift(memberID);
+        this._setGiftedUsers(giftedUsers);
+    }
+
+    private _markMemberGifted(member: HTMLAnchorElement): void {
+        if (!member.classList.contains('mp_gifted')) {
+            member.innerText = `${member.innerText} ✅`;
+            member.classList.add('mp_gifted');
+        }
+    }
+
+    private _getNewUsersMembers(
+        container: HTMLDivElement
+    ): Array<{ label: HTMLLabelElement; member: HTMLAnchorElement; checkbox: HTMLInputElement }> {
+        return Array.from(container.querySelectorAll('label')).reduce(
+            (memberRows, label) => {
+                const member = label.querySelector('a');
+                const checkbox = label.querySelector('input[type="checkbox"]');
+
+                if (
+                    member instanceof HTMLAnchorElement &&
+                    checkbox instanceof HTMLInputElement
+                ) {
+                    memberRows.push({ label, member, checkbox });
+                }
+
+                return memberRows;
+            },
+            [] as Array<{
+                label: HTMLLabelElement;
+                member: HTMLAnchorElement;
+                checkbox: HTMLInputElement;
+            }>
+        );
     }
 
     get settings(): CheckboxSetting {
