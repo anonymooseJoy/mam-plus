@@ -233,6 +233,14 @@ This protects issue `#131`.
 
 This protects issue `#14`.
 
+`tests/unit/shout.menuUserActions.test.ts`
+
+- verifies the shoutbox dot menu gets `Emphasize` and `Block` actions
+- verifies those actions append the selected user ID to the priority and muted settings
+- verifies re-clicking does not duplicate existing entries
+
+This protects issue `#15`.
+
 `tests/unit/browse.features.test.ts`
 
 - verifies bookmark icon override adds the `mp_bookmarkOverride` body class when enabled
