@@ -151,20 +151,22 @@ a[class^='mp_mark_'] {
     top: 8px;
     left: 5px;
 }
-a[id^='torBookmark'] {
-    .mp_dark & {
-        background: url($bookmark-for-dark) no-repeat;
+.mp_bookmarkOverride {
+    a[id^='torBookmark'] {
+        .mp_dark & {
+            background: url($bookmark-for-dark) no-repeat;
+        }
+        .mp_light & {
+            background: url($bookmark-for-lite) no-repeat;
+        }
     }
-    .mp_light & {
-        background: url($bookmark-for-lite) no-repeat;
-    }
-}
-a[id^='torDeBookmark'] {
-    .mp_dark & {
-        background: url($demark-for-dark) no-repeat;
-    }
-    .mp_light & {
-        background: url($demark-for-lite) no-repeat;
+    a[id^='torDeBookmark'] {
+        .mp_dark & {
+            background: url($demark-for-dark) no-repeat;
+        }
+        .mp_light & {
+            background: url($demark-for-lite) no-repeat;
+        }
     }
 }
 .mp_formButton {

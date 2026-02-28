@@ -45,6 +45,40 @@ class HideHome implements Feature {
 }
 
 /**
+ * ## Use custom bookmark icons
+ */
+class BookmarkIcons implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Global,
+        type: 'checkbox',
+        title: 'bookmarkIcons',
+        desc: `Use MAM+'s custom bookmark icons instead of the site's default icons`,
+    };
+    private _tar: string = 'body';
+
+    constructor() {
+        if (GM_getValue(this._settings.title) === undefined) {
+            GM_setValue(this._settings.title, true);
+        }
+
+        Util.startFeature(this._settings, this._tar).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _init() {
+        document.body.classList.add('mp_bookmarkOverride');
+        console.log('[M+] Enabled custom bookmark icons!');
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
  * ## Bypass the vault info page
  */
 class VaultLink implements Feature {

@@ -16,6 +16,7 @@ class InitFeatures {
     constructor() {
         // Initialize Global functions
         new HideHome();
+        new BookmarkIcons();
         new HideSeedbox();
         new HideDonationBox();
         new BlurredHeader();
