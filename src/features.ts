@@ -38,6 +38,7 @@ class InitFeatures {
         new ToggleSearchbox();
         new FiletypeSearchFilter();
         new BuildTags();
+        new MultiSelectBrowse();
         new RandomBook();
 
         // Initialize Freeleech Page functions
