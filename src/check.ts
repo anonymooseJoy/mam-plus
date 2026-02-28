@@ -167,6 +167,7 @@ class Check {
                     index: () => 'home',
                     shoutbox: () => 'shoutbox',
                     preferences: () => 'settings',
+                    store: () => 'store',
                     millionaires: () => 'vault',
                     t: () => 'torrent',
                     u: () => 'user',
