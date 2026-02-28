@@ -605,6 +605,7 @@ class HideNews implements Feature {
         // GM_deleteValue(this._valueTitle);console.warn(`Value of ${this._valueTitle} will be deleted!`);
 
         this._removeClock();
+        this._removeDisclaimer();
         this._adjustHeaderSize(this._tar);
         await this._checkForSeen();
         this._addHiderButton();
@@ -642,6 +643,15 @@ class HideNews implements Feature {
     _removeClock = () => {
         const clock: HTMLDivElement | null = document.querySelector('#mainBody .fpTime');
         if (clock) clock.remove();
+    };
+
+    _removeDisclaimer = () => {
+        const disclaimerHeader = Array.from(
+            document.querySelectorAll('#mainBody .blockHeadCon h4')
+        ).find((header) => header.textContent?.trim() === 'Disclaimer');
+        const disclaimerBlock = disclaimerHeader?.closest('.blockCon') as HTMLDivElement | null;
+
+        if (disclaimerBlock) disclaimerBlock.remove();
     };
 
     _adjustHeaderSize = (selector: string, visible?: boolean) => {
