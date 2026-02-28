@@ -301,15 +301,6 @@ a[class^='mp_mark_'] {
         background: #cac4a8;
     }
 }
-.mp_replyButton {
-    button {
-        border-radius: 50%;
-        border: none;
-    }
-    &:hover button {
-        background: hsla(0, 0%, 100%, 0.1);
-    }
-}
 #mp_giftStatusElem {
     font-family: monospace;
     color: white;
