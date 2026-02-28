@@ -547,7 +547,6 @@ class BuildTags implements Feature {
             tagRow.classList.add('mp_tags');
             tar.insertAdjacentElement('beforebegin', tagRow);
             tar.style.display = 'none';
-            tagRow.insertAdjacentElement('afterend', document.createElement('br'));
             // Add the tags to the tag row
             tags.forEach((tag) => {
                 tagRow.innerHTML += `<a class='mp_tag' href='/tor/browse.php?tor%5Btext%5D=%22${encodeURIComponent(
