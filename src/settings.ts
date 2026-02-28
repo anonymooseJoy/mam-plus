@@ -2,24 +2,78 @@
 /// <reference path="util.ts" />
 /// <reference path="./modules/core.ts" />
 
+interface SettingsRenderOptions {
+    copyId?: string;
+    includeCopyPaste?: boolean;
+    includeIntro?: boolean;
+    saveHint?: string;
+    saveId?: string;
+    saveText?: string;
+    scopes?: SettingGroup[];
+    tableClass?: string;
+    tableStyle?: string;
+    titleText?: string;
+}
+
 /**
  * Class for handling settings and the Preferences page
- * @method init: turns features' settings info into a useable table
+ * @method init: turns features' settings info into a usable table
  */
 class Settings {
+    private static _defaultOptions: Required<SettingsRenderOptions> = {
+        copyId: 'mp_copy',
+        includeCopyPaste: true,
+        includeIntro: true,
+        saveHint: 'Saved!',
+        saveId: 'mp_submit',
+        saveText: 'Save M+ Settings',
+        scopes: [],
+        tableClass: 'coltable',
+        tableStyle: 'width:100%;min-width:100%;max-width:100%;',
+        titleText: 'MAM+ Settings',
+    };
+
+    private static _buildIntro() {
+        return `<tr><td class="row1" colspan="2"><br><strong>MAM+ v${
+            MP.VERSION
+        }</strong> - Here you can enable &amp; disable any feature from the <a href="/f/t/41863">MAM+ userscript</a>! However, these settings are <strong>NOT</strong> stored on MAM; they are stored within the Tampermonkey/Greasemonkey extension in your browser, and must be customized on each of your browsers/devices separately.<br><br>For a detailed look at the available features, <a href="${Util.derefer(
+            'https://github.com/gardenshade/mam-plus/wiki/Feature-Overview'
+        )}">check the Wiki!</a><br><br></td></tr>`;
+    }
+
+    private static _normalizeOptions(
+        options: SettingsRenderOptions = {}
+    ): Required<SettingsRenderOptions> {
+        return {
+            ...this._defaultOptions,
+            ...options,
+        };
+    }
+
     // Function for gathering the needed scopes
-    private static _getScopes(settings: AnyFeature[]): Promise<SettingGlobObject> {
+    private static _getScopes(
+        settings: AnyFeature[],
+        scopeFilter?: SettingGroup[]
+    ): Promise<SettingGlobObject> {
         if (MP.DEBUG) {
-            console.log('_getScopes(', settings, ')');
+            console.log('_getScopes(', settings, ',', scopeFilter, ')');
         }
         return new Promise((resolve) => {
             const scopeList: SettingGlobObject = {};
+            const allowedScopes =
+                scopeFilter && scopeFilter.length > 0
+                    ? new Set<number>(scopeFilter.map((scope) => Number(scope)))
+                    : null;
+
             for (const setting of settings) {
                 const index: number = Number(setting.scope);
-                // If the Scope exists, push the settings into the array
+
+                if (allowedScopes && !allowedScopes.has(index)) {
+                    continue;
+                }
+
                 if (scopeList[index]) {
                     scopeList[index].push(setting);
-                    // Otherwise, create the array
                 } else {
                     scopeList[index] = [setting];
                 }
@@ -29,20 +83,21 @@ class Settings {
     }
 
     // Function for constructing the table from an object
-    private static _buildTable(page: SettingGlobObject): Promise<string> {
-        if (MP.DEBUG) console.log('_buildTable(', page, ')');
+    private static _buildTable(
+        page: SettingGlobObject,
+        options: Required<SettingsRenderOptions>
+    ): Promise<string> {
+        if (MP.DEBUG) console.log('_buildTable(', page, ',', options, ')');
         return new Promise((resolve) => {
-            let outp = `<tbody><tr><td class="row1" colspan="2"><br><strong>MAM+ v${
-                MP.VERSION
-            }</strong> - Here you can enable &amp; disable any feature from the <a href="/f/t/41863">MAM+ userscript</a>! However, these settings are <strong>NOT</strong> stored on MAM; they are stored within the Tampermonkey/Greasemonkey extension in your browser, and must be customized on each of your browsers/devices separately.<br><br>For a detailed look at the available features, <a href="${Util.derefer(
-                'https://github.com/gardenshade/mam-plus/wiki/Feature-Overview'
-            )}">check the Wiki!</a><br><br></td></tr>`;
+            let outp = '<tbody>';
+
+            if (options.includeIntro) {
+                outp += this._buildIntro();
+            }
 
             Object.keys(page).forEach((scope) => {
                 const scopeNum: number = Number(scope);
-                // Insert the section title
                 outp += `<tr><td class='row2'>${SettingGroup[scopeNum]}</td><td class='row1'>`;
-                // Create the required input field based on the setting
                 Object.keys(page[scopeNum]).forEach((setting) => {
                     const settingNumber: number = Number(setting);
                     const item: AnyFeature = page[scopeNum][settingNumber];
@@ -58,9 +113,7 @@ class Settings {
                             outp += `<span class='mp_setTag'>${item.tag}:</span> <select id='${item.title}' class='mp_dropInput'>`;
                             if (item.options) {
                                 Object.keys(item.options).forEach((key) => {
-                                    outp += `<option value='${key}'>${
-                                        item.options![key]
-                                    }</option>`;
+                                    outp += `<option value='${key}'>${item.options![key]}</option>`;
                                 });
                             }
                             outp += `</select>${item.desc}<br>`;
@@ -68,20 +121,21 @@ class Settings {
                     };
                     if (item.type) cases[item.type]();
                 });
-                // Close the row
                 outp += '</td></tr>';
             });
-            // Add the save button & last part of the table
-            outp +=
-                '<tr><td class="row1" colspan="2"><div id="mp_submit" class="mp_settingBtn">Save M+ Settings??</div><div id="mp_copy" class="mp_settingBtn">Copy Settings</div><div id="mp_inject" class="mp_settingBtn">Paste Settings</div><span class="mp_savestate" style="opacity:0">Saved!</span></td></tr></tbody>';
+
+            outp += `<tr><td class="row1" colspan="2"><div id="${options.saveId}" class="mp_settingBtn">${options.saveText}</div>`;
+            if (options.includeCopyPaste) {
+                outp += `<div id="${options.copyId}" class="mp_settingBtn">Copy Settings</div><div id="mp_inject" class="mp_settingBtn">Paste Settings</div>`;
+            }
+            outp += `<span class="mp_savestate" style="opacity:0">${options.saveHint}</span></td></tr></tbody>`;
 
             resolve(outp);
         });
     }
 
     // Function for retrieving the current settings values
-    private static _getSettings(page: SettingGlobObject) {
-        // Util.purgeSettings();
+    private static _getSettings(page: SettingGlobObject, root: ParentNode) {
         const allValues: string[] = GM_listValues();
         if (MP.DEBUG) {
             console.log('_getSettings(', page, ')\nStored GM keys:', allValues);
@@ -102,18 +156,24 @@ class Settings {
                 }
 
                 if (pref !== null && typeof pref === 'object') {
-                    const elem: HTMLInputElement = <HTMLInputElement>(
-                        document.getElementById(pref.title)!
+                    const elem = <HTMLInputElement | null>root.querySelector(
+                        `#${pref.title}`
                     );
+                    if (!elem) {
+                        return;
+                    }
+
                     const cases = {
                         checkbox: () => {
-                            elem.setAttribute('checked', 'checked');
+                            elem.checked = true;
                         },
                         textbox: () => {
-                            elem.value = GM_getValue(`${pref.title}_val`);
+                            const storedValue = GM_getValue(`${pref.title}_val`);
+                            elem.value = storedValue ? `${storedValue}` : '';
                         },
                         dropdown: () => {
-                            elem.value = GM_getValue(pref.title);
+                            const storedValue = GM_getValue(pref.title);
+                            elem.value = storedValue ? `${storedValue}` : '';
                         },
                     };
                     if (cases[pref.type] && GM_getValue(pref.title)) cases[pref.type]();
@@ -122,20 +182,25 @@ class Settings {
         });
     }
 
-    private static _setSettings(obj: SettingGlobObject) {
+    private static _setSettings(obj: SettingGlobObject, root: ParentNode) {
         if (MP.DEBUG) console.log(`_setSettings(`, obj, ')');
         Object.keys(obj).forEach((scope) => {
             Object.keys(obj[Number(scope)]).forEach((setting) => {
                 const pref = obj[Number(scope)][Number(setting)];
 
                 if (pref !== null && typeof pref === 'object') {
-                    const elem: HTMLInputElement = <HTMLInputElement>(
-                        document.getElementById(pref.title)!
+                    const elem = <HTMLInputElement | null>root.querySelector(
+                        `#${pref.title}`
                     );
+                    if (!elem) {
+                        return;
+                    }
 
                     const cases = {
                         checkbox: () => {
-                            if (elem.checked) GM_setValue(pref.title, true);
+                            if (elem.checked) {
+                                GM_setValue(pref.title, true);
+                            }
                         },
                         textbox: () => {
                             const inp: string = elem.value;
@@ -160,9 +225,7 @@ class Settings {
         const gmList = GM_listValues();
         const outp: [string, string][] = [];
 
-        // Loop over all stored settings and push to output array
         gmList.map((setting) => {
-            // Don't export mp_ settings as they should only be set at runtime
             if (setting.indexOf('mp_') < 0) {
                 outp.push([setting, GM_getValue(setting)]);
             }
@@ -183,26 +246,28 @@ class Settings {
     }
 
     // Function that saves the values of the settings table
-    private static _saveSettings(timer: number, obj: SettingGlobObject) {
+    private static _saveSettings(
+        timer: number,
+        obj: SettingGlobObject,
+        root: ParentNode,
+        saveHint: string
+    ) {
         if (MP.DEBUG) console.group(`_saveSettings()`);
 
-        const savestate: HTMLSpanElement = <HTMLSpanElement>(
-            document.querySelector('span.mp_savestate')!
-        );
+        const savestate = <HTMLSpanElement | null>root.querySelector('span.mp_savestate');
         const gmValues: string[] = GM_listValues();
 
-        // Reset timer & message
-        savestate.style.opacity = '0';
+        if (savestate) {
+            savestate.style.opacity = '0';
+            savestate.textContent = saveHint;
+        }
         window.clearTimeout(timer);
 
         console.log('[M+] Saving...');
 
-        // Loop over all values stored in GM and reset everything
         for (const feature in gmValues) {
             if (typeof gmValues[feature] !== 'function') {
-                // Only loop over values that are feature settings
                 if (!['mp_version', 'style_theme'].includes(gmValues[feature])) {
-                    //if not part of preferences page
                     if (gmValues[feature].indexOf('mp_') !== 0) {
                         GM_setValue(gmValues[feature], false);
                     }
@@ -210,20 +275,70 @@ class Settings {
             }
         }
 
-        // Save the settings to GM values
-        this._setSettings(obj);
+        this._setSettings(obj, root);
 
-        // Display the confirmation message
-        savestate.style.opacity = '1';
-        try {
-            timer = window.setTimeout(() => {
-                savestate.style.opacity = '0';
-            }, 2345);
-        } catch (e) {
-            if (MP.DEBUG) console.warn(e);
+        if (savestate) {
+            savestate.style.opacity = '1';
+            try {
+                timer = window.setTimeout(() => {
+                    savestate.style.opacity = '0';
+                }, 2345);
+            } catch (e) {
+                if (MP.DEBUG) console.warn(e);
+            }
         }
 
         if (MP.DEBUG) console.groupEnd();
+    }
+
+    public static async renderInto(
+        root: HTMLElement,
+        settings: AnyFeature[],
+        renderOptions: SettingsRenderOptions = {}
+    ) {
+        const options = this._normalizeOptions(renderOptions);
+        const pageScope = await this._getScopes(settings, options.scopes);
+        const wrapper = document.createElement('div');
+        const settingTable = document.createElement('table');
+
+        root.innerHTML = '';
+        wrapper.className = 'mp_settingsHost';
+        settingTable.className = options.tableClass;
+        settingTable.setAttribute('cellspacing', '1');
+        settingTable.setAttribute('style', options.tableStyle);
+
+        if (options.titleText) {
+            const title = document.createElement('h1');
+            title.textContent = options.titleText;
+            wrapper.appendChild(title);
+        }
+
+        settingTable.innerHTML = await this._buildTable(pageScope, options);
+        wrapper.appendChild(settingTable);
+        root.appendChild(wrapper);
+        this._getSettings(pageScope, root);
+
+        const submitBtn = <HTMLDivElement | null>root.querySelector(`#${options.saveId}`);
+        const copyBtn = <HTMLDivElement | null>root.querySelector(`#${options.copyId}`);
+        const pasteBtn = <HTMLDivElement | null>root.querySelector('#mp_inject');
+        let ssTimer: number;
+
+        try {
+            submitBtn?.addEventListener(
+                'click',
+                () => {
+                    this._saveSettings(ssTimer, pageScope, root, options.saveHint);
+                },
+                false
+            );
+
+            if (options.includeCopyPaste && pasteBtn && copyBtn) {
+                Util.clipboardifyBtn(pasteBtn, this._pasteSettings, false);
+                Util.clipboardifyBtn(copyBtn, this._copySettings());
+            }
+        } catch (err) {
+            if (MP.DEBUG) console.warn(err);
+        }
     }
 
     /**
@@ -232,76 +347,31 @@ class Settings {
      * @param settings The array of features to provide settings for
      */
     public static async init(result: boolean, settings: AnyFeature[]) {
-        // This will only run if `Check.page('settings)` returns true & is passed here
         if (result === true) {
             if (MP.DEBUG) {
                 console.group(`new Settings()`);
             }
 
-            // Make sure the settings table has loaded
-            await Check.elemLoad('#mainBody > table').then((r) => {
+            await Check.elemLoad('#mainBody > table').then(() => {
                 if (MP.DEBUG) console.log(`[M+] Starting to build Settings table...`);
-                // Create new table elements
                 const settingNav: Element = document.querySelector('#mainBody > table')!;
-                const settingTitle: HTMLHeadingElement = document.createElement('h1');
-                const settingTable: HTMLTableElement = document.createElement('table');
-                let pageScope: SettingGlobObject;
+                const settingRoot: HTMLDivElement = document.createElement('div');
 
-                // Insert table elements after the Pref navbar
-                settingNav.insertAdjacentElement('afterend', settingTitle);
-                settingTitle.insertAdjacentElement('afterend', settingTable);
-                Util.setAttr(settingTable, {
-                    class: 'coltable',
-                    cellspacing: '1',
-                    style: 'width:100%;min-width:100%;max-width:100%;',
+                settingNav.insertAdjacentElement('afterend', settingRoot);
+
+                this.renderInto(settingRoot, settings, {
+                    includeCopyPaste: true,
+                    includeIntro: true,
+                    saveHint: 'Saved!',
+                    saveId: 'mp_submit',
+                    saveText: 'Save M+ Settings',
+                    titleText: 'MAM+ Settings',
+                }).then(() => {
+                    console.log('[M+] Added the MAM+ Settings table!');
+                    if (MP.DEBUG) {
+                        console.groupEnd();
+                    }
                 });
-                settingTitle.innerHTML = 'MAM+ Settings';
-                // Group settings by page
-                this._getScopes(settings)
-                    // Generate table HTML from feature settings
-                    .then((scopes) => {
-                        pageScope = scopes;
-                        return this._buildTable(scopes);
-                    })
-                    // Insert content into the new table elements
-                    .then((result) => {
-                        settingTable.innerHTML = result;
-                        console.log('[M+] Added the MAM+ Settings table!');
-                        return pageScope;
-                    })
-                    .then((scopes) => {
-                        this._getSettings(scopes);
-                        return scopes;
-                    })
-                    // Make sure the settings are done loading
-                    .then((scopes) => {
-                        const submitBtn: HTMLDivElement = <HTMLDivElement>(
-                            document.querySelector('#mp_submit')!
-                        );
-                        const copyBtn: HTMLDivElement = <HTMLDivElement>(
-                            document.querySelector('#mp_copy')!
-                        );
-                        const pasteBtn: HTMLDivElement = <HTMLDivElement>(
-                            document.querySelector('#mp_inject')!
-                        );
-                        let ssTimer: number;
-                        try {
-                            submitBtn.addEventListener(
-                                'click',
-                                () => {
-                                    this._saveSettings(ssTimer, scopes);
-                                },
-                                false
-                            );
-                            Util.clipboardifyBtn(pasteBtn, this._pasteSettings, false);
-                            Util.clipboardifyBtn(copyBtn, this._copySettings());
-                        } catch (err) {
-                            if (MP.DEBUG) console.warn(err);
-                        }
-                        if (MP.DEBUG) {
-                            console.groupEnd();
-                        }
-                    });
             });
         }
     }

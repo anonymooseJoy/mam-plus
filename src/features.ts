@@ -68,6 +68,7 @@ class InitFeatures {
         new MutedUsers();
         new GiftButton();
         new QuickEditShout();
+        new ShoutboxSettings();
         new ShoutPreview();
         new QuickShout();
 
