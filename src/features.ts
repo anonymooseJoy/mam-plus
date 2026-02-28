@@ -32,6 +32,8 @@ class InitFeatures {
         // Initialize Search Page functions
         new ToggleSnatched();
         new StickySnatchedToggle();
+        new ToggleBookmarked();
+        new StickyBookmarkedToggle();
         new PlaintextSearch();
         new ToggleSearchbox();
         new BuildTags();
