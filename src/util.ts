@@ -798,6 +798,46 @@ class Util {
         );
     };
 
+    /**
+     * #### Convert a human-readable size string into bytes
+     * Example inputs: `53.79 GiB`, `102.885 TiB`
+     */
+    public static parseSizeToBytes = (text: string): number => {
+        const match = text.replace(/,/g, '').match(
+            /(\d+(?:\.\d+)?)\s*(Bytes|KiB|MiB|GiB|TiB|PiB|EiB|ZiB|YiB)/i
+        );
+
+        if (match === null) {
+            throw new Error(`Could not parse size from "${text}"`);
+        }
+
+        const value = parseFloat(match[1]);
+        const unit = match[2];
+        const sizeMap = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+        const power = sizeMap.findIndex((item) => item.toLowerCase() === unit.toLowerCase());
+
+        if (power < 0) {
+            throw new Error(`Unknown size unit "${unit}"`);
+        }
+
+        return value * Math.pow(1024, power);
+    };
+
+    /**
+     * #### Calculate the extra upload needed to reach a target ratio
+     */
+    public static uploadNeededForTargetRatio = (
+        uploadedBytes: number,
+        downloadedBytes: number,
+        targetRatio: number
+    ): number => {
+        if (downloadedBytes <= 0 || targetRatio <= 0) {
+            return 0;
+        }
+
+        return Math.max(0, targetRatio * downloadedBytes - uploadedBytes);
+    };
+
     public static derefer = (url: string) => {
         return `https://r.mrd.ninja/${encodeURI(url)}`;
     };

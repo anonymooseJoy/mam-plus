@@ -69,6 +69,8 @@ test('browse synthetic page applies bookmark and filetype helpers', async ({ pag
 test("store synthetic page disables purchases the user can't afford", async ({ page }) => {
     await installGMStubs(page, {
         grayOutStorePurchases: true,
+        storeTargetRatio: true,
+        storeTargetRatio_val: '1960',
         mp_version: '4.4.2',
     });
     await loadFixturePage(page, '/store.php', 'tests/fixtures/store.html');
@@ -78,6 +80,8 @@ test("store synthetic page disables purchases the user can't afford", async ({ p
     await expect(page.locator('.cheeseContent button')).toBeDisabled();
     await expect(page.locator('.pointsContent button[value="expensive"]')).toBeDisabled();
     await expect(page.locator('.pointsContent button[value="ok"]')).toBeEnabled();
+    await expect(page.locator('#mp_storeTargetRatio')).toContainText('74.16 GiB');
+    await expect(page.locator('#mp_storeTargetRatio')).toContainText('37,080 BP');
 });
 
 test('shoutbox synthetic page retries gift with a lower amount', async ({ page }) => {
