@@ -482,7 +482,7 @@ class GiftButton implements Feature {
             //get the user details from the popup menu details
             const popupUser: HTMLElement = Util.nodeToElem(popupMenu!.childNodes[0]);
             //make username equal the data-uid, force not null
-            const userName: String = popupUser!.getAttribute('data-uid')!;
+            const userName: string = popupUser!.getAttribute('data-uid')!;
             //get the default value of gifts set in preferences for user page
             let giftValueSetting: string | undefined = GM_getValue('userGiftDefault_val');
             //if they did not set a value in preferences, set to 100
@@ -504,56 +504,72 @@ class GiftButton implements Feature {
             //add gift element with button and text to the menu
             popupMenu!.childNodes[0].appendChild(giftButton);
             //add event listener for when gift button is clicked
-            giftButton.querySelector('button')!.addEventListener('click', () => {
-                //pull whatever the final value of the text box equals
-                const giftFinalAmount = (<HTMLInputElement>(
+            giftButton.querySelector('button')!.addEventListener('click', async () => {
+                const requestedAmount = Number((<HTMLInputElement>(
                     document.getElementById('mp_giftValue')
-                ))!.value;
-                //begin setting up the GET request to MAM JSON
-                const giftHTTP = new XMLHttpRequest();
-                //URL to GET results with the amount entered by user plus the username found on the menu selected
-                //added message contents encoded to prevent unintended characters from breaking JSON URL
-                const url = `https://www.myanonamouse.net/json/bonusBuy.php?spendtype=gift&amount=${giftFinalAmount}&giftTo=${userName}&message=${encodeURIComponent(
-                    giftMessage
-                )}`;
-                giftHTTP.open('GET', url, true);
-                giftHTTP.setRequestHeader('Content-Type', 'application/json');
-                giftHTTP.onreadystatechange = function () {
-                    if (giftHTTP.readyState === 4 && giftHTTP.status === 200) {
-                        const json = JSON.parse(giftHTTP.responseText);
-                        //create a new line in SB that shows gift was successful to acknowledge gift worked/failed
-                        const newDiv = document.createElement('div');
-                        newDiv.setAttribute('id', 'mp_giftStatusElem');
-                        sbfDivChild!.appendChild(newDiv);
-                        //if the gift succeeded
-                        if (json.success) {
-                            const successMsg = document.createTextNode(
-                                'Points Gift Successful: Value: ' + giftFinalAmount
-                            );
-                            newDiv.appendChild(successMsg);
-                            newDiv.classList.add('mp_success');
-                        } else {
-                            const failedMsg = document.createTextNode(
-                                'Points Gift Failed: Error: ' + json.error
-                            );
-                            newDiv.appendChild(failedMsg);
-                            newDiv.classList.add('mp_fail');
-                        }
-                        //after we add line in SB, scroll to bottom to show result
-                        sbfDiv.scrollTop = sbfDiv.scrollHeight;
-                    }
-                    //after we add line in SB, scroll to bottom to show result
-                    sbfDiv.scrollTop = sbfDiv.scrollHeight;
-                };
+                ))!.value);
+                const knownRemainingAllowance = Util.getRemainingPointGiftAllowance(
+                    userName
+                );
+                let giftFinalAmount = requestedAmount;
+                let adjustedFromAmount: number | undefined;
 
-                giftHTTP.send();
+                if (
+                    knownRemainingAllowance > 0 &&
+                    knownRemainingAllowance < requestedAmount
+                ) {
+                    giftFinalAmount = knownRemainingAllowance;
+                    adjustedFromAmount = requestedAmount;
+                } else if (knownRemainingAllowance === 0) {
+                    this._showGiftStatus(
+                        sbfDiv,
+                        sbfDivChild,
+                        'Points Gift Failed: Error: Maximum daily points already sent today',
+                        false
+                    );
+                    this._closeGiftMenu(sbfDiv);
+                    return;
+                }
+
+                let json = await this._sendPointGift(userName, giftFinalAmount, giftMessage);
+
+                if (!json.success) {
+                    const retryAmount = this._getRetryGiftAmount(
+                        json.error,
+                        giftFinalAmount,
+                        knownRemainingAllowance
+                    );
+
+                    if (retryAmount !== null && retryAmount !== giftFinalAmount) {
+                        adjustedFromAmount = requestedAmount;
+                        giftFinalAmount = retryAmount;
+                        json = await this._sendPointGift(
+                            userName,
+                            giftFinalAmount,
+                            giftMessage
+                        );
+                    }
+                }
+
+                if (json.success) {
+                    Util.recordPointGift(userName, giftFinalAmount);
+                    const successMessage =
+                        adjustedFromAmount !== undefined &&
+                        adjustedFromAmount !== giftFinalAmount
+                            ? `Points Gift Successful: Value: ${giftFinalAmount} (adjusted from ${adjustedFromAmount})`
+                            : `Points Gift Successful: Value: ${giftFinalAmount}`;
+                    this._showGiftStatus(sbfDiv, sbfDivChild, successMessage, true);
+                } else {
+                    this._showGiftStatus(
+                        sbfDiv,
+                        sbfDivChild,
+                        'Points Gift Failed: Error: ' + json.error,
+                        false
+                    );
+                }
+
                 //return to main SB window after gift is clicked - these are two steps taken by MAM when clicking out of Menu
-                sbfDiv
-                    .getElementsByClassName('sb_clicked_row')[0]!
-                    .removeAttribute('class');
-                document
-                    .getElementById('sbMenuMain')!
-                    .setAttribute('class', 'sbBottom hideMe');
+                this._closeGiftMenu(sbfDiv);
             });
             giftButton.querySelector('input')!.addEventListener('input', () => {
                 const valueToNumber: String = (<HTMLInputElement>(
@@ -571,6 +587,73 @@ class GiftButton implements Feature {
             });
             console.log(`[M+] Gift Button added!`);
         });
+    }
+
+    private async _sendPointGift(
+        userName: number | string,
+        amount: number,
+        giftMessage: string
+    ): Promise<any> {
+        const url = `https://www.myanonamouse.net/json/bonusBuy.php?spendtype=gift&amount=${amount}&giftTo=${userName}&message=${encodeURIComponent(
+            giftMessage
+        )}`;
+        return JSON.parse(await Util.getJSON(url));
+    }
+
+    private _getRetryGiftAmount(
+        error: string,
+        attemptedAmount: number,
+        knownRemainingAllowance: number
+    ): number | null {
+        if (!error) {
+            return null;
+        }
+
+        const candidates = (error.match(/\d[\d,]*/g) || [])
+            .map((value) => parseInt(value.replace(/,/g, '')))
+            .filter((value) => !isNaN(value) && value >= 5);
+        let retryAmount = candidates
+            .filter((value) => value < attemptedAmount)
+            .sort((a, b) => b - a)[0];
+
+        if (
+            knownRemainingAllowance > 0 &&
+            knownRemainingAllowance < attemptedAmount &&
+            (retryAmount === undefined || knownRemainingAllowance < retryAmount)
+        ) {
+            retryAmount = knownRemainingAllowance;
+        }
+
+        return retryAmount === undefined ? null : retryAmount;
+    }
+
+    private _showGiftStatus(
+        sbfDiv: HTMLDivElement,
+        sbfDivChild: ChildNode | null,
+        message: string,
+        success: boolean
+    ): void {
+        if (!sbfDivChild) {
+            return;
+        }
+
+        const newDiv = document.createElement('div');
+        newDiv.setAttribute('id', 'mp_giftStatusElem');
+        newDiv.appendChild(document.createTextNode(message));
+        newDiv.classList.add(success ? 'mp_success' : 'mp_fail');
+        sbfDivChild.appendChild(newDiv);
+        sbfDiv.scrollTop = sbfDiv.scrollHeight;
+    }
+
+    private _closeGiftMenu(sbfDiv: HTMLDivElement): void {
+        const clickedRow = sbfDiv.getElementsByClassName('sb_clicked_row')[0];
+        if (clickedRow) {
+            clickedRow.removeAttribute('class');
+        }
+        const menu = document.getElementById('sbMenuMain');
+        if (menu) {
+            menu.setAttribute('class', 'sbBottom hideMe');
+        }
     }
 
     get settings(): CheckboxSetting {
