@@ -78,13 +78,10 @@ class PotHistory implements Feature {
 
     private async _init() {
         const subPage: string = GM_getValue('mp_currentPage');
+        const page = <HTMLElement>document.querySelector(this._tar);
         const form = <HTMLElement>(
             document.querySelector(this._tar + ' form[method="post"]')
         );
-
-        if (!form) {
-            return;
-        }
 
         const potPageResp = await fetch('/millionaires/pot.php');
         if (!potPageResp.ok) {
@@ -102,14 +99,22 @@ class PotHistory implements Feature {
         const donateTbl: HTMLTableElement | null = potPage.querySelector(
             '#mainTable table:last-of-type'
         );
+        const currentTbl: HTMLTableElement | null = page.querySelector('table:last-of-type');
 
         // Add the donate table if it exists
-        if (donateTbl !== null && form !== null) {
+        if (donateTbl !== null) {
             const newTable: HTMLTableElement = <HTMLTableElement>(
                 donateTbl.cloneNode(true)
             );
-            form.parentElement?.appendChild(newTable);
             newTable.classList.add('mp_vaultClone');
+
+            if (currentTbl !== null) {
+                currentTbl.replaceWith(newTable);
+            } else if (form !== null && form.parentElement !== null) {
+                form.parentElement.appendChild(newTable);
+            } else {
+                page.appendChild(newTable);
+            }
         }
         console.log('[M+] Added the donation history to the donation page!');
     }
