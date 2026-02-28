@@ -43,4 +43,24 @@ describe('GrayOutStorePurchases', () => {
             )
         ).toBe(true);
     });
+
+    it('shows how much upload credit is needed to reach a target ratio', async () => {
+        const { document } = await loadUserscriptInJsdom({
+            gmValues: {
+                mp_version: '4.4.2',
+                storeTargetRatio: true,
+                storeTargetRatio_val: '1960',
+            },
+            html: readFileSync('tests/fixtures/store.html', 'utf8'),
+            url: 'https://www.myanonamouse.net/store.php',
+        });
+
+        await waitFor(50);
+
+        const targetRatioBox = document.querySelector('#mp_storeTargetRatio') as HTMLDivElement;
+        expect(targetRatioBox).not.toBeNull();
+        expect(targetRatioBox.textContent).toContain('74.16 GiB');
+        expect(targetRatioBox.textContent).toContain('37,080 BP');
+        expect(targetRatioBox.textContent).toContain('1960.00');
+    });
 });

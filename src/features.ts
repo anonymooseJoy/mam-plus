@@ -75,6 +75,7 @@ class InitFeatures {
 
         // Initialize Store functions
         new GrayOutStorePurchases();
+        new CostToSetRatio();
 
         // Initialize User Page functions
         new UserGiftDefault();

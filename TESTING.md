@@ -218,8 +218,9 @@ This protects issues `#195`, `#232`, `#250`, `#251`, and `#252`.
 - verifies insufficient cheese disables cheese purchases
 - verifies unaffordable point purchases are disabled
 - verifies affordable point purchases stay enabled
+- verifies the store target-ratio helper displays the upload credit and BP needed to reach a configured ratio
 
-This protects issue `#5`.
+This protects issues `#5` and `#192`.
 
 `tests/unit/shout.giftRetry.test.ts`
 
@@ -256,7 +257,7 @@ Current smoke scenarios:
 - new users page: `Select Max Ungifted` appears and selects the expected rows
 - freeleech page: sections collapse by default and expand on toggle
 - browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together
-- store page: unaffordable purchases are disabled while affordable ones remain enabled
+- store page: unaffordable purchases are disabled while affordable ones remain enabled, and target-ratio upload credit guidance is displayed
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
 - vault page: stale donation history is replaced even without a donate form

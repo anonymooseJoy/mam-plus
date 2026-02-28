@@ -235,3 +235,140 @@ class GrayOutStorePurchases implements Feature {
         return this._settings;
     }
 }
+
+class CostToSetRatio implements Feature {
+    private _settings: TextboxSetting = {
+        scope: SettingGroup.Store,
+        type: 'textbox',
+        title: 'storeTargetRatio',
+        tag: 'Target Ratio',
+        placeholder: 'ex. 5',
+        desc: 'Display how much upload credit you need to buy to reach a target ratio',
+    };
+    private _tar: string = '.uploadCreditContent';
+    private _outputID: string = 'mp_storeTargetRatio';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['store']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _init() {
+        this._render();
+        this._watchForChanges();
+        console.log('[M+] Added cost to set ratio to the store page!');
+    }
+
+    private _render() {
+        const targetRatio = parseFloat(GM_getValue(`${this._settings.title}_val`));
+        const content = document.querySelector(this._tar) as HTMLDivElement | null;
+
+        if (content === null) {
+            return;
+        }
+
+        let output = document.getElementById(this._outputID) as HTMLDivElement | null;
+        if (output === null) {
+            output = document.createElement('div');
+            output.id = this._outputID;
+            output.className = 'mp_store_ratioTarget';
+            content.insertAdjacentElement('afterbegin', output);
+        }
+
+        if (isNaN(targetRatio) || targetRatio <= 0) {
+            output.textContent = 'Enter a valid target ratio in MAM+ settings to see the upload credit cost.';
+            return;
+        }
+
+        const currentRatio = this._getRatio();
+        const uploadedBytes = this._getBytes('#uploadedTD');
+        const downloadedBytes = this._getBytes('#downloadedTD');
+
+        if (currentRatio === null || uploadedBytes === null || downloadedBytes === null) {
+            output.textContent =
+                'Could not determine your current ratio and totals for the target-ratio calculation.';
+            return;
+        }
+
+        const uploadNeededBytes = Util.uploadNeededForTargetRatio(
+            uploadedBytes,
+            downloadedBytes,
+            targetRatio
+        );
+
+        if (uploadNeededBytes <= 0) {
+            output.innerHTML = `<strong>Target Ratio:</strong> Your current ratio of ${currentRatio.toFixed(
+                2
+            )} already meets or exceeds ${targetRatio.toFixed(2)}.`;
+            return;
+        }
+
+        const pointsNeeded = Math.ceil((uploadNeededBytes / Math.pow(1024, 3)) * 500);
+        output.innerHTML = `<strong>Target Ratio:</strong> Buy <strong>${Util.formatBytes(
+            uploadNeededBytes
+        )}</strong> of upload credit (${pointsNeeded.toLocaleString()} BP) to reach ratio <strong>${targetRatio.toFixed(
+            2
+        )}</strong>.`;
+    }
+
+    private _watchForChanges() {
+        const watchTargets = ['#tmR', '#uploadedTD', '#downloadedTD', '#currentBonusPoints']
+            .map((selector) => document.querySelector(selector))
+            .filter((elem): elem is HTMLElement => elem !== null);
+
+        if (watchTargets.length === 0) {
+            return;
+        }
+
+        const observer = new MutationObserver(() => {
+            this._render();
+        });
+
+        watchTargets.forEach((target) => {
+            observer.observe(target, {
+                characterData: true,
+                childList: true,
+                subtree: true,
+            });
+        });
+
+        const uploadButtons = document.querySelectorAll(
+            '.uploadCreditContent button'
+        ) as NodeListOf<HTMLButtonElement>;
+        uploadButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                window.setTimeout(() => this._render(), 250);
+            });
+        });
+    }
+
+    private _getRatio(): number | null {
+        const ratioElem = document.querySelector('#tmR, #RatioTD') as HTMLElement | null;
+        if (ratioElem === null) {
+            return null;
+        }
+
+        const ratio = Util.extractFloat(ratioElem)[0];
+        return isNaN(ratio) ? null : ratio;
+    }
+
+    private _getBytes(selector: string): number | null {
+        const elem = document.querySelector(selector) as HTMLElement | null;
+        if (elem === null || elem.textContent === null) {
+            return null;
+        }
+
+        try {
+            return Util.parseSizeToBytes(elem.textContent);
+        } catch {
+            return null;
+        }
+    }
+
+    get settings(): TextboxSetting {
+        return this._settings;
+    }
+}
