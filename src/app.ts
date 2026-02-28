@@ -11,6 +11,7 @@
 /// <reference path="./modules/upload.ts" />
 /// <reference path="./modules/user.ts" />
 /// <reference path="./modules/vault.ts" />
+/// <reference path="./modules/store.ts" />
 /// <reference path="features.ts" />
 /// <reference path="settings.ts" />
 

@@ -207,6 +207,14 @@ a[id^='torDeBookmark'] {
 .mp_bpDelta {
     opacity: 0.7;
 }
+.mp_store_disabled {
+    opacity: 0.45;
+    filter: grayscale(1);
+    cursor: not-allowed;
+}
+.mp_store_disabled_section {
+    opacity: 0.7;
+}
 .mp_tags {
     display: block;
     padding: 0.8rem 0;

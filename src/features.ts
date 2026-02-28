@@ -67,6 +67,9 @@ class InitFeatures {
         new SimpleVault();
         new PotHistory();
 
+        // Initialize Store functions
+        new GrayOutStorePurchases();
+
         // Initialize User Page functions
         new UserGiftDefault();
         new UserGiftHistory();
