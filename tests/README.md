@@ -205,8 +205,12 @@ This protects the recent-gift store cleanup logic from issue `#198`.
 - verifies clickable tags are generated from plaintext tag text
 - verifies the original plaintext tag row is hidden
 - verifies the clickable-tag feature no longer inserts an extra `<br>`
+- verifies the multi-select toolbar relocates into the `Mass actions` block
+- verifies result checkboxes are injected for browse rows
+- verifies `Open Selected` uses canonical `/t/<id>` URLs
+- verifies bulk download and bookmark actions only act on selected rows
 
-This protects issues `#232`, `#250`, `#251`, and `#252`.
+This protects issues `#195`, `#232`, `#250`, `#251`, and `#252`.
 
 `tests/unit/store.grayOut.test.ts`
 
@@ -251,7 +255,7 @@ Current smoke scenarios:
 
 - new users page: `Select Max Ungifted` appears and selects the expected rows
 - freeleech page: sections collapse by default and expand on toggle
-- browse page: bookmark override, filetype picker, bookmarked-row hiding, and clickable tags all initialize together
+- browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together
 - store page: unaffordable purchases are disabled while affordable ones remain enabled
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
