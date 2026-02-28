@@ -383,6 +383,26 @@ a[class^='mp_mark_'] {
 .mp_shoutPreview_error {
     color: #cc3300;
 }
+.mp_shoutSettings {
+    margin-top: 8px;
+
+    h1 {
+        font-size: 1.1rem;
+        margin: 0 0 8px;
+    }
+
+    .coltable {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .mp_savestate {
+        display: inline-block;
+        padding-left: 10px;
+        vertical-align: middle;
+    }
+}
 .mp_blurredBack {
     position: relative;
     z-index: 1;

@@ -220,11 +220,18 @@ This protects issue `#179`.
 
 `tests/unit/shout.quickEdit.test.ts`
 
-- verifies the quick-edit button calls the site's `editShout()` helper
 - verifies the shoutbox shows the quick-edit hint and that `Ctrl+Up` drives the site's existing shout menu/edit overlay flow for the newest editable shout
 - verifies the shortcut targets the newest editable shout, not just the first one found
 
 This protects issue `#131`.
+
+`tests/unit/shout.settingsPanel.test.ts`
+
+- verifies the shoutbox settings toggle renders only shoutbox settings inline
+- verifies stored shoutbox values populate the embedded settings panel
+- verifies saving from the embedded panel writes updated GM settings
+
+This protects issue `#14`.
 
 `tests/unit/browse.features.test.ts`
 

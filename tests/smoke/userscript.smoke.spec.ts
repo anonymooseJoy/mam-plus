@@ -198,6 +198,43 @@ test('shoutbox synthetic page shows the quick-edit hint and loads the newest edi
     await expect(page.locator('#sbEditOverlay')).not.toHaveClass(/hideMe/);
 });
 
+test('shoutbox synthetic page can open and save shoutbox settings in place', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        giftButton: true,
+        mp_version: '4.4.2',
+        priorityUsers: true,
+        priorityUsers_val: 'system',
+    });
+    await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
+    await loadUserscript(page);
+
+    await page.locator('#mp_shoutSettingsToggle').click();
+    await expect(page.locator('#mp_shoutSettingsPanel')).toBeVisible();
+    await expect(page.locator('#mp_shoutSettingsPanel h1')).toContainText(
+        'Shoutbox Settings'
+    );
+    await expect(page.locator('#giftButton')).toBeChecked();
+    await expect(page.locator('#priorityUsers')).toHaveValue('system');
+
+    await page.locator('#giftButton').uncheck();
+    await page.locator('#mutedUsers').fill('gardenshade');
+    await page.locator('#mp_shoutSettingsSubmit').click();
+
+    const storedValues = await page.evaluate(() => {
+        return {
+            giftButton: GM_getValue('giftButton'),
+            mutedUsers: GM_getValue('mutedUsers'),
+            mutedUsersVal: GM_getValue('mutedUsers_val'),
+        };
+    });
+
+    expect(storedValues.giftButton).toBe(false);
+    expect(storedValues.mutedUsers).toBe(true);
+    expect(storedValues.mutedUsersVal).toBe('gardenshade');
+});
+
 test('quick shout stays visible when the shoutbox enters fullscreen', async ({ page }) => {
     await installGMStubs(page, {
         mp_version: '4.4.2',

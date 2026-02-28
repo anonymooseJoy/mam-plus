@@ -1153,3 +1153,66 @@ class QuickEditShout implements Feature {
         return this._settings;
     }
 }
+
+/**
+ * Shows shoutbox settings directly in the shoutbox.
+ */
+class ShoutboxSettings {
+    constructor() {
+        Promise.all([Check.page('shoutbox'), Check.page('home')]).then((pages) => {
+            if (pages.includes(true)) {
+                Check.elemLoad('#sbform').then(() => {
+                    this._init();
+                });
+            }
+        });
+    }
+
+    private async _init() {
+        console.log(`[M+] Adding shoutbox settings panel...`);
+
+        const shoutForm = <HTMLElement | null>document.getElementById('sbform');
+        const shoutNotifs = <HTMLElement | null>document.getElementById('sbNotifs');
+        if (!shoutForm || !shoutNotifs) {
+            return;
+        }
+
+        const toggleButton = document.createElement('button');
+        const panel = document.createElement('div');
+
+        toggleButton.id = 'mp_shoutSettingsToggle';
+        toggleButton.type = 'button';
+        toggleButton.className = 'mp_plainBtn';
+        toggleButton.textContent = 'Settings';
+
+        panel.id = 'mp_shoutSettingsPanel';
+        panel.className = 'mp_shoutSettings';
+        panel.style.display = 'none';
+
+        toggleButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            const isOpening = panel.style.display === 'none';
+            panel.style.display = isOpening ? 'block' : 'none';
+            toggleButton.textContent = isOpening ? 'Hide Settings' : 'Settings';
+
+            if (!isOpening || panel.childElementCount > 0) {
+                return;
+            }
+
+            await Settings.renderInto(panel, MP.settingsGlob, {
+                includeCopyPaste: false,
+                includeIntro: false,
+                saveHint: 'Saved! Reload the page if a setting does not update immediately.',
+                saveId: 'mp_shoutSettingsSubmit',
+                saveText: 'Save Shoutbox Settings',
+                scopes: [SettingGroup.Shoutbox],
+                tableStyle: 'width:100%;',
+                titleText: 'Shoutbox Settings',
+            });
+        });
+
+        shoutForm.appendChild(toggleButton);
+        shoutNotifs.insertAdjacentElement('afterend', panel);
+    }
+}
