@@ -1026,3 +1026,130 @@ class ShoutPreview implements Feature {
         return this._settings;
     }
 }
+
+/**
+ * Loads the most recent editable shout into the site's edit UI.
+ */
+class QuickEditShout implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Shoutbox,
+        type: 'checkbox',
+        title: 'quickEditShout',
+        desc: `Shows a hint for Ctrl+Up in the shoutbox input to edit your most recent shout.`,
+    };
+    private _tar: string = '#shbox_text';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['shoutbox', 'home']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init() {
+        console.log(`[M+] Adding quick shout edit shortcut...`);
+
+        const shoutInput = <HTMLInputElement | null>document.getElementById('shbox_text');
+        const shoutForm = <HTMLElement | null>document.getElementById('sbform');
+        if (!shoutInput || !shoutForm) {
+            return;
+        }
+
+        const getLatestEditableMenu = () => {
+            let latestMenu: HTMLElement | null = null;
+            let latestId = 0;
+
+            document.querySelectorAll('.sbf .sb_menu').forEach((menu) => {
+                if (Number(menu.getAttribute('data-ee') || '0') <= 0) {
+                    return;
+                }
+
+                const shoutRow = menu.closest('div[id^="sbid"]');
+                const parsedId = Number(shoutRow?.id.replace('sbid', ''));
+
+                if (!isNaN(parsedId) && parsedId > latestId) {
+                    latestId = parsedId;
+                    latestMenu = menu as HTMLElement;
+                }
+            });
+
+            return latestMenu;
+        };
+
+        const openLatestEditableShout = () => {
+            if (getLatestEditableMenu() === null) {
+                return false;
+            }
+
+            const script = document.createElement('script');
+            script.textContent = `(function () {
+                var latestMenu = null;
+                var latestId = 0;
+                document.querySelectorAll('.sbf .sb_menu').forEach(function (menu) {
+                    if (Number(menu.getAttribute('data-ee') || '0') <= 0) {
+                        return;
+                    }
+                    var shoutRow = menu.closest('div[id^="sbid"]');
+                    var parsedId = Number((shoutRow && shoutRow.id || '').replace('sbid', ''));
+                    if (!isNaN(parsedId) && parsedId > latestId) {
+                        latestId = parsedId;
+                        latestMenu = menu;
+                    }
+                });
+                if (!latestMenu) {
+                    return;
+                }
+                latestMenu.click();
+                window.setTimeout(function () {
+                    var editButton = document.getElementById('sbEdit');
+                    if (editButton instanceof HTMLElement) {
+                        editButton.click();
+                    }
+                }, 0);
+            })();`;
+            (document.head || document.documentElement).appendChild(script);
+            script.remove();
+            return true;
+        };
+
+        const quickEditHint = document.createElement('span');
+        quickEditHint.id = 'mp_quickEditShoutHint';
+        quickEditHint.textContent = 'Press Ctrl+Up to edit your last shout';
+        quickEditHint.style.marginLeft = '5px';
+        quickEditHint.style.opacity = getLatestEditableMenu() === null ? '0.6' : '1';
+        shoutForm.appendChild(quickEditHint);
+
+        document.addEventListener(
+            'keydown',
+            (event) => {
+                if (document.activeElement !== shoutInput) {
+                    return;
+                }
+
+            const isUpKey =
+                event.key === 'ArrowUp' ||
+                event.key === 'Up' ||
+                event.code === 'ArrowUp' ||
+                event.keyCode === 38;
+
+                if (!event.ctrlKey || event.altKey || event.metaKey || !isUpKey) {
+                    return;
+                }
+
+                if (getLatestEditableMenu() === null) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                openLatestEditableShout();
+            },
+            true
+        );
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}

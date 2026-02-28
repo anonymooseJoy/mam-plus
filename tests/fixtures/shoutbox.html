@@ -6,14 +6,51 @@
   <link rel="stylesheet" href="https://www.myanonamouse.net/site-ICGstation.css">
 </head>
 <body>
+  <script>
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const menu = target.closest('.sb_menu');
+      if (menu instanceof HTMLElement) {
+        const shoutRow = menu.closest('div[id^="sbid"]');
+        const sbid = (shoutRow?.id || '').replace('sbid', '');
+        const menuMain = document.getElementById('sbMenuMain');
+        if (!menuMain || !sbid) {
+          return;
+        }
+        menuMain.classList.remove('hideMe');
+        menuMain.innerHTML = '<ul data-sbid="' + sbid + '"><li id="sbEdit">edit</li></ul>';
+        return;
+      }
+
+      if (target.id === 'sbEdit') {
+        const parent = target.parentElement;
+        const sbid = parent?.getAttribute('data-sbid') || '';
+        window.__mpEditedShoutId = sbid;
+        const overlay = document.getElementById('sbEditOverlay');
+        const editShout = document.getElementById('editShout');
+        if (overlay instanceof HTMLElement) {
+          overlay.classList.remove('hideMe');
+        }
+        if (editShout instanceof HTMLInputElement) {
+          editShout.value = 'Loaded shout ' + sbid;
+          editShout.setAttribute('data-sbid', sbid);
+        }
+      }
+    });
+  </script>
   <div class="mmUserStats">
     <span class="avatar"><a href="/u/999">me</a></span>
   </div>
   <div id="fpShout" class="blockCon">
     <div id="shoutbox" class="tabs">
       <div id="sbMenuMain" class="sbBottom"><div data-uid="123"><span>Gift Menu</span></div></div>
+      <div id="sbEditOverlay" class="hideMe"><input id="editShout" type="text" value=""></div>
       <ul id="sbMenuTabs"><li>Shoutbox</li></ul>
-      <div id="sbf" class="sbf blockBody"><div class="blockBodyCon"><div class="sb_clicked_row"><div class="shoutRow">12:34:56 User123: Hello from synthetic shoutbox <span class="sb_menu" data-ee="0">...</span></div></div></div></div>
+      <div id="sbf" class="sbf blockBody"><div class="blockBodyCon"><div id="sbid100" class="sb_clicked_row"><div class="shoutRow">12:34:56 User123: Hello from synthetic shoutbox <span class="sb_menu" data-ee="0">...</span></div></div><div id="sbid200"><div class="shoutRow">12:35:10 Me: First editable shout <span class="sb_menu" data-ee="1">...</span></div></div><div id="sbid250"><div class="shoutRow">12:35:40 Me: Latest editable shout <span class="sb_menu" data-ee="2">...</span></div></div></div></div>
       <form id="sbform" method="get" target="sbox" name="shbox" aria-controls="sbf">
         <input type="hidden" id="cv" name="cv" value="sbf">
         <input id="shbox_text" class="sb_ac_u sb_ac_s" type="text" name="shbox_text" maxlength="1500" autocomplete="off">
