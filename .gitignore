@@ -8,4 +8,7 @@ node_modules
 !.vscode/*.code-snippets
 notes.md
 .eslintcache
+playwright-report/
+test-results/
+tests/private/
 html/*
