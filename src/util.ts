@@ -445,6 +445,129 @@ class Util {
     }
 
     /**
+     * #### Return today's UTC date in YYYY-MM-DD format
+     */
+    public static getUTCDateString(date: Date = new Date()): string {
+        return date.toISOString().split('T')[0];
+    }
+
+    /**
+     * #### Read the local recent point-gift store and drop stale or malformed entries
+     */
+    public static getRecentPointGifts(): RecentPointGift[] {
+        const key = 'mp_recentPointGifts';
+        const today = Util.getUTCDateString();
+        const rawGiftHistory: string | undefined = GM_getValue(key);
+
+        if (!rawGiftHistory) {
+            GM_setValue(key, '[]');
+            return [];
+        }
+
+        let parsed: any;
+        try {
+            parsed = JSON.parse(rawGiftHistory);
+        } catch (error) {
+            console.warn('[M+] Invalid recent point-gift data; resetting store.', error);
+            GM_setValue(key, '[]');
+            return [];
+        }
+
+        if (!Array.isArray(parsed)) {
+            GM_setValue(key, '[]');
+            return [];
+        }
+
+        const sanitized: RecentPointGift[] = parsed
+            .map((gift) => {
+                return {
+                    amount: Number(gift.amount),
+                    userID: `${gift.userID || ''}`,
+                    utcDate: `${gift.utcDate || ''}`,
+                };
+            })
+            .filter((gift) => {
+                return (
+                    gift.userID !== '' &&
+                    !isNaN(gift.amount) &&
+                    gift.amount > 0 &&
+                    gift.utcDate === today
+                );
+            });
+
+        if (JSON.stringify(parsed) !== JSON.stringify(sanitized)) {
+            GM_setValue(key, JSON.stringify(sanitized));
+        }
+
+        return sanitized;
+    }
+
+    /**
+     * #### Save a point-gift total for a user for the current UTC day
+     */
+    public static recordPointGift(userID: number | string, amount: number): void {
+        const key = 'mp_recentPointGifts';
+        const today = Util.getUTCDateString();
+        const normalizedID = `${userID}`;
+        const giftHistory = Util.getRecentPointGifts();
+        const existing = giftHistory.find((gift) => gift.userID === normalizedID);
+
+        if (existing) {
+            existing.amount += amount;
+        } else {
+            giftHistory.unshift({
+                amount,
+                userID: normalizedID,
+                utcDate: today,
+            });
+        }
+
+        GM_setValue(key, JSON.stringify(giftHistory));
+    }
+
+    /**
+     * #### Sum locally stored point gifts sent to a user today
+     */
+    public static getSentPointsToday(userID: number | string): number {
+        const normalizedID = `${userID}`;
+        return Util.getRecentPointGifts()
+            .filter((gift) => gift.userID === normalizedID)
+            .reduce((sum, gift) => sum + gift.amount, 0);
+    }
+
+    /**
+     * #### Determine the maximum points a user can receive today
+     *
+     * When the current page exposes a native gift input, prefer its `max` value.
+     * Otherwise fall back to the site's normal point-gift cap.
+     */
+    public static getPointGiftDailyLimit(): number {
+        const selectors = ['#bonusgift', '#thanksArea input[name=points]'];
+
+        for (const selector of selectors) {
+            const pointBox = <HTMLInputElement | null>document.querySelector(selector);
+            if (pointBox) {
+                const maxPoints = parseInt(pointBox.getAttribute('max') || '');
+                if (!isNaN(maxPoints) && maxPoints > 0) {
+                    return maxPoints;
+                }
+            }
+        }
+
+        return 1000;
+    }
+
+    /**
+     * #### Return how many points can still be sent to a user today
+     */
+    public static getRemainingPointGiftAllowance(userID: number | string): number {
+        return Math.max(
+            Util.getPointGiftDailyLimit() - Util.getSentPointsToday(userID),
+            0
+        );
+    }
+
+    /**
      * #### Gets the logged in user's userid
      */
     public static getCurrentUserID(): string {

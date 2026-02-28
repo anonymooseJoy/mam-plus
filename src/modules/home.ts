@@ -40,6 +40,7 @@ class GiftNewest implements Feature {
     private async _homePageGifting() {
         //ensure gifted list is under 500 member names long
         this._trimGiftList();
+        Util.getRecentPointGifts();
         //get the FrontPage NewMembers element containing newest 10 members
         const fpNM = <HTMLDivElement>document.querySelector('#fpNM');
         const members: HTMLAnchorElement[] = Array.prototype.slice.call(
@@ -48,13 +49,8 @@ class GiftNewest implements Feature {
         const lastMem = members[members.length - 1];
         members.forEach((member) => {
             //add a class to the existing element for use in reference in creating buttons
-            member.setAttribute('class', `mp_refPoint_${Util.endOfHref(member)}`);
-            //if the member has been gifted through this feature previously
-            if (GM_getValue('mp_lastNewGifted').indexOf(Util.endOfHref(member)) >= 0) {
-                //add checked box to text
-                member.innerText = `${member.innerText} ✅`;
-                member.classList.add('mp_gifted');
-            }
+            member.classList.add(`mp_refPoint_${Util.endOfHref(member)}`);
+            this._markKnownGiftStatus(member);
         });
         //get the default value of gifts set in preferences for user page
         let giftValueSetting: string | undefined = GM_getValue('userGiftDefault_val');
@@ -96,6 +92,7 @@ class GiftNewest implements Feature {
             'click',
             async () => {
                 let firstCall: boolean = true;
+                let skippedCount = 0;
                 for (const member of members) {
                     //update the text to show processing
                     document.getElementById('mp_giftAllMsg')!.innerText =
@@ -105,9 +102,27 @@ class GiftNewest implements Feature {
                         //get the members name for JSON string
                         const userName = member.innerText;
                         //get the points amount from the input box
-                        const giftFinalAmount = (<HTMLInputElement>(
+                        const giftFinalAmount = Number((<HTMLInputElement>(
                             document.getElementById('mp_giftAmounts')
-                        ))!.value;
+                        ))!.value);
+                        const memberID = Util.endOfHref(member)!;
+                        const remainingAllowance = Util.getRemainingPointGiftAllowance(
+                            memberID
+                        );
+
+                        if (remainingAllowance < giftFinalAmount) {
+                            skippedCount += 1;
+                            console.warn(
+                                `[M+] Skipping ${userName}; ${remainingAllowance} points remaining today.`
+                            );
+                            if (remainingAllowance === 0) {
+                                this._markGiftedMember(
+                                    member,
+                                    'Maximum daily points already sent today'
+                                );
+                            }
+                            continue;
+                        }
                         //URL to GET random search results
                         const url = `https://www.myanonamouse.net/json/bonusBuy.php?spendtype=gift&amount=${giftFinalAmount}&giftTo=${userName}`;
                         //wait 3 seconds between JSON calls
@@ -119,20 +134,12 @@ class GiftNewest implements Feature {
                         //request sending points
                         const jsonResult: string = await Util.getJSON(url);
                         if (MP.DEBUG) console.log('Gift Result', jsonResult);
+                        const json = JSON.parse(jsonResult);
                         //if gift was successfully sent
-                        if (JSON.parse(jsonResult).success) {
-                            //check off box
-                            member.innerText = `${member.innerText} \u2611`;
-                            member.classList.add('mp_gifted');
-                            //add member to the stored member list
-                            GM_setValue(
-                                'mp_lastNewGifted',
-                                `${Util.endOfHref(member)},${GM_getValue(
-                                    'mp_lastNewGifted'
-                                )}`
-                            );
-                        } else if (!JSON.parse(jsonResult).success) {
-                            console.warn(JSON.parse(jsonResult).error);
+                        if (json.success) {
+                            this._recordSuccessfulGift(member, giftFinalAmount);
+                        } else if (!json.success) {
+                            console.warn(json.error);
                         }
                     }
                 }
@@ -140,7 +147,9 @@ class GiftNewest implements Feature {
                 //disable button after send
                 (giftAllBtn as HTMLInputElement).disabled = true;
                 document.getElementById('mp_giftAllMsg')!.innerText =
-                    'Gifts completed to all Checked Users';
+                    skippedCount > 0
+                        ? `Gifts completed. Skipped ${skippedCount} over daily limit.`
+                        : 'Gifts completed to all Checked Users';
             },
             false
         );
@@ -215,6 +224,7 @@ class GiftNewest implements Feature {
     private async _newUsersPageGifting() {
         // Ensure the gifted list is under 500 members
         this._trimGiftList();
+        Util.getRecentPointGifts();
 
         // Select the container holding the newest members
         const fpNM = document.querySelector('.blockCon') as HTMLDivElement;
@@ -227,12 +237,7 @@ class GiftNewest implements Feature {
             const checkbox = label.querySelector('input[type="checkbox"]') as HTMLInputElement;
             const memberRef = `mp_refPoint_${Util.endOfHref(member)}`;
             member.classList.add(memberRef);
-
-            // If the member has already been gifted, update the display
-            if (GM_getValue('mp_lastNewGifted').includes(Util.endOfHref(member))) {
-                member.innerText += ' ✅';
-                member.classList.add('mp_gifted');
-            }
+            this._markKnownGiftStatus(member);
         });
 
         // Retrieve or default the gift value setting
@@ -267,7 +272,10 @@ class GiftNewest implements Feature {
         giftAllBtn.addEventListener('click', async () => {
             document.getElementById('mp_giftAllMsg')!.innerText = 'Sending Gifts... Please Wait';
             let firstCall = true;
-            const giftAmount = (document.getElementById('mp_giftAmounts') as HTMLInputElement).value;
+            let skippedCount = 0;
+            const giftAmount = Number(
+                (document.getElementById('mp_giftAmounts') as HTMLInputElement).value
+            );
 
             for (const label of memberLabels) {
                 const member = label.querySelector('a') as HTMLAnchorElement;
@@ -275,6 +283,25 @@ class GiftNewest implements Feature {
 
                 if (checkbox.checked && !member.classList.contains('mp_gifted')) {
                     const userName = member.innerText;
+                    const memberID = Util.endOfHref(member)!;
+                    const remainingAllowance = Util.getRemainingPointGiftAllowance(
+                        memberID
+                    );
+
+                    if (remainingAllowance < giftAmount) {
+                        skippedCount += 1;
+                        console.warn(
+                            `[M+] Skipping ${userName}; ${remainingAllowance} points remaining today.`
+                        );
+                        if (remainingAllowance === 0) {
+                            this._markGiftedMember(
+                                member,
+                                'Maximum daily points already sent today'
+                            );
+                        }
+                        continue;
+                    }
+
                     const url = `https://www.myanonamouse.net/json/bonusBuy.php?spendtype=gift&amount=${giftAmount}&giftTo=${userName}`;
 
                     if (!firstCall) await Util.sleep(3000);
@@ -282,19 +309,21 @@ class GiftNewest implements Feature {
 
                     const jsonResult = await Util.getJSON(url);
                     if (MP.DEBUG) console.log('Gift Result', jsonResult);
+                    const json = JSON.parse(jsonResult);
 
-                    if (JSON.parse(jsonResult).success) {
-                        member.innerText += ' ✅';
-                        member.classList.add('mp_gifted');
-                        GM_setValue('mp_lastNewGifted', `${Util.endOfHref(member)},${GM_getValue('mp_lastNewGifted')}`);
+                    if (json.success) {
+                        this._recordSuccessfulGift(member, giftAmount);
                     } else {
-                        console.warn(JSON.parse(jsonResult).error);
+                        console.warn(json.error);
                     }
                 }
             }
 
             (giftAllBtn as HTMLButtonElement).disabled = true;
-            document.getElementById('mp_giftAllMsg')!.innerText = 'Gifts completed to all Checked Users';
+            document.getElementById('mp_giftAllMsg')!.innerText =
+                skippedCount > 0
+                    ? `Gifts completed. Skipped ${skippedCount} over daily limit.`
+                    : 'Gifts completed to all Checked Users';
         });
 
         // Input validation for gift amount
@@ -419,6 +448,50 @@ class GiftNewest implements Feature {
             //set value if doesnt exist
             GM_setValue('mp_lastNewGifted', '');
         }
+    }
+
+    /**
+     * * Add the gifted styling once without duplicating the checkmark text
+     */
+    private _markGiftedMember(member: HTMLAnchorElement, title?: string) {
+        if (!member.classList.contains('mp_gifted')) {
+            member.innerText = `${member.innerText} ✅`;
+            member.classList.add('mp_gifted');
+        }
+
+        if (title) {
+            member.title = title;
+        }
+    }
+
+    /**
+     * * Mark users already known as gifted, either from the legacy list or today's cache
+     */
+    private _markKnownGiftStatus(member: HTMLAnchorElement) {
+        const memberID = Util.endOfHref(member);
+        if (!memberID) {
+            return;
+        }
+
+        if (GM_getValue('mp_lastNewGifted').indexOf(memberID) >= 0) {
+            this._markGiftedMember(member);
+        }
+
+        if (Util.getRemainingPointGiftAllowance(memberID) === 0) {
+            this._markGiftedMember(member, 'Maximum daily points already sent today');
+        }
+    }
+
+    /**
+     * * Keep legacy tracking and the new daily cache in sync after a successful gift
+     */
+    private _recordSuccessfulGift(member: HTMLAnchorElement, amount: number) {
+        this._markGiftedMember(member);
+        GM_setValue(
+            'mp_lastNewGifted',
+            `${Util.endOfHref(member)},${GM_getValue('mp_lastNewGifted')}`
+        );
+        Util.recordPointGift(Util.endOfHref(member)!, amount);
     }
 
     get settings(): CheckboxSetting {
