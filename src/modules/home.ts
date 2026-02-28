@@ -214,6 +214,16 @@ class GiftNewest implements Feature {
         const fpNM = document.querySelector('.blockCon') as HTMLDivElement;
         const footer = document.querySelector('.blockFoot') as HTMLDivElement;
         const memberLabels = this._getNewUsersMembers(fpNM);
+        const getAvailablePoints = (): number => {
+            const bonusPointText = document.getElementById('tmBP')!.innerText.split(':')[1];
+            const match = bonusPointText.match(/[\d,]+/);
+
+            if (match === null) {
+                return 0;
+            }
+
+            return parseInt(match[0].replace(/,/g, ''));
+        };
 
         // Loop through each member and check if they were previously gifted
         memberLabels.forEach(({ member }) => {
@@ -363,8 +373,47 @@ class GiftNewest implements Feature {
             console.log(`[M+] Selected ${count} ungifted users.`);
         });
 
+        // Add "Select Max Ungifted" button
+        const selectMaxUngiftedBtn = await Util.createButton(
+            'mp_selectMaxUngifted',
+            'Select Max Ungifted',
+            'button',
+            footer,
+            'afterend',
+            'mp_btn'
+        );
+        selectMaxUngiftedBtn.title =
+            'Select the maximum number of ungifted users you can afford at the current gift size';
+        selectMaxUngiftedBtn.addEventListener('click', () => {
+            const giftAmount = Number(giftAmounts.value);
+            const availablePoints = getAvailablePoints();
+
+            if (giftAmount < 5 || giftAmount > 100 || isNaN(giftAmount) || giftAmount === 0) {
+                console.warn('[M+] Cannot select max ungifted users; gift amount is invalid.');
+                return;
+            }
+
+            const maxSelectable = Math.floor(availablePoints / giftAmount);
+            let count = 0;
+
+            for (const { checkbox } of memberLabels) {
+                checkbox.checked = false;
+            }
+
+            for (const { member, checkbox } of memberLabels) {
+                if (!member.classList.contains('mp_gifted') && count < maxSelectable) {
+                    checkbox.checked = true;
+                    count++;
+                }
+            }
+
+            console.log(
+                `[M+] Selected ${count} ungifted users using ${availablePoints} available points at ${giftAmount} points each.`
+            );
+        });
 
         // Append all elements to the footer
+        footer.appendChild(selectMaxUngiftedBtn);
         footer.appendChild(selectUngiftedBtn);
         footer.appendChild(deselectBtn);
         footer.appendChild(giftAmounts);
