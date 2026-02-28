@@ -64,6 +64,12 @@ interface UserGiftHistory {
     type: string;
 }
 
+interface RecentPointGift {
+    amount: number;
+    userID: string;
+    utcDate: string;
+}
+
 interface ArrayObject {
     [key: string]: string[];
 }
