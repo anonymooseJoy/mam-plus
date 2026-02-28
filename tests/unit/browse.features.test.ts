@@ -108,4 +108,63 @@ describe('Browse features', () => {
 
         expect(document.body.classList.contains('mp_bookmarkOverride')).toBe(false);
     });
+
+    it('adds a mass-actions multi-select toolbar and limits bulk actions to selected rows', async () => {
+        const openedUrls: string[] = [];
+        const { document } = await loadUserscriptInJsdom({
+            beforeEval(window) {
+                window.open = ((url?: string | URL) => {
+                    openedUrls.push(String(url));
+                    return null;
+                }) as typeof window.open;
+
+                window.document.querySelectorAll('.directDownload').forEach((link, index) => {
+                    link.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        const row = window.document.querySelector(`#tdr${index + 1}`) as HTMLElement;
+                        row.dataset.downloaded = 'true';
+                    });
+                });
+
+                const bookmarkLink = window.document.querySelector('#torBookmark2') as HTMLElement;
+                bookmarkLink.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    bookmarkLink.setAttribute('data-bookmarked', 'true');
+                });
+            },
+            gmValues: {
+                mp_version: '4.4.2',
+                multiSelectBrowse: true,
+            },
+            html: readFileSync('tests/fixtures/browse.html', 'utf8'),
+            url: 'https://www.myanonamouse.net/tor/browse.php',
+        });
+
+        await waitFor(50);
+
+        const toolbar = document.querySelector('#massActions #mp_multiSelectToolbar') as HTMLElement;
+        expect(toolbar).not.toBeNull();
+        expect(toolbar.className).toContain('mp_multiSelectToolbar_massActions');
+        expect(document.querySelectorAll('#ssr .mp_multiSelectBox')).toHaveLength(2);
+
+        (document.querySelector('#tdr1 .mp_multiSelectBox') as HTMLInputElement).checked = true;
+        (document.querySelector('#tdr2 .mp_multiSelectBox') as HTMLInputElement).checked = true;
+
+        (document.querySelector('#mp_multiSelectOpen') as HTMLElement).click();
+        expect(openedUrls).toEqual([
+            'https://www.myanonamouse.net/t/1',
+            'https://www.myanonamouse.net/t/2',
+        ]);
+
+        (document.querySelector('#tdr1 .mp_multiSelectBox') as HTMLInputElement).checked = false;
+
+        (document.querySelector('#mp_multiSelectDownload') as HTMLElement).click();
+        (document.querySelector('#mp_multiSelectBookmark') as HTMLElement).click();
+
+        expect((document.querySelector('#tdr1') as HTMLElement).dataset.downloaded).toBeUndefined();
+        expect((document.querySelector('#tdr2') as HTMLElement).dataset.downloaded).toBe('true');
+        expect(
+            (document.querySelector('#torBookmark2') as HTMLElement).getAttribute('data-bookmarked')
+        ).toBe('true');
+    });
 });

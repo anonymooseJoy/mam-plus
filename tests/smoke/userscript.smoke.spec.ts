@@ -42,6 +42,7 @@ test('browse synthetic page applies bookmark and filetype helpers', async ({ pag
         bookmarkIcons: true,
         buildTags: true,
         filetypeSearchFilter: true,
+        multiSelectBrowse: true,
         mp_version: '4.4.2',
         toggleBookmarked: true,
     });
@@ -49,6 +50,11 @@ test('browse synthetic page applies bookmark and filetype helpers', async ({ pag
     await loadUserscript(page);
 
     await expect(page.locator('body')).toHaveClass(/mp_bookmarkOverride/);
+    await expect(page.locator('#massActions #mp_multiSelectToolbar')).toBeVisible();
+    await expect(page.locator('#ssr .mp_multiSelectBox')).toHaveCount(2);
+    await page.locator('#massActions #mp_multiSelectAll').click();
+    await expect(page.locator('#ssr .mp_multiSelectBox:checked')).toHaveCount(2);
+
     await page.locator('#mp_filetypeSearchToggle').click();
     await page.locator('#mp_filetypeSearchPanel input[value="pdf"]').check();
     await expect(page.locator('#torTitle')).toHaveValue(/@filetype\{pdf\}/);
