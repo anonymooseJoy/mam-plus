@@ -508,7 +508,7 @@ class PlaintextSearch implements Feature {
         if (val === undefined) {
             val = 'false';
         } // Default value
-        GM_setValue('toggleSnatchedState', val);
+        GM_setValue(`${this._settings.title}State`, val);
         this._isOpen = val;
     }
 

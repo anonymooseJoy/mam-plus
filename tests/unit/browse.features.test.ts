@@ -109,6 +109,33 @@ describe('Browse features', () => {
         expect(document.body.classList.contains('mp_bookmarkOverride')).toBe(false);
     });
 
+    it('stores plaintext toggle state without overwriting the snatched toggle state', async () => {
+        const browseHtml = readFileSync('tests/fixtures/browse.html', 'utf8')
+            .replace('<table id="ssr">', '<div id="ssr"><h1>Results</h1><table>')
+            .replace('</table>\n  <div id="massActions">', '</table></div>\n  <div id="massActions">');
+        const { document, gmStore } = await loadUserscriptInJsdom({
+            gmValues: {
+                mp_version: '4.4.2',
+                plaintextSearch: true,
+                stickySnatchedToggle: true,
+                toggleSnatched: true,
+                toggleSnatchedState: 'false',
+            },
+            html: browseHtml,
+            url: 'https://www.myanonamouse.net/tor/browse.php',
+        });
+
+        await waitFor(50);
+
+        const plaintextToggle = document.querySelector('#mp_plainToggle') as HTMLElement | null;
+        expect(plaintextToggle).not.toBeNull();
+
+        plaintextToggle!.click();
+
+        expect(gmStore.get('plaintextSearchState')).toBe('true');
+        expect(gmStore.get('toggleSnatchedState')).toBe('false');
+    });
+
     it('adds a mass-actions multi-select toolbar and limits bulk actions to selected rows', async () => {
         const openedUrls: string[] = [];
         const { document } = await loadUserscriptInJsdom({

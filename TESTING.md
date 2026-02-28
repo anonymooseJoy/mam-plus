@@ -209,6 +209,7 @@ This protects issue `#187`.
 - verifies the override does not apply when disabled
 - verifies the filetype picker writes `@filetype{...}` into the search field
 - verifies an existing `@filetype{...}` token is parsed back into checked boxes
+- verifies the plaintext toggle stores its own state without overwriting the snatched toggle state
 - verifies `Hide Bookmarked` hides bookmarked rows while leaving other rows visible
 - verifies clickable tags are generated from plaintext tag text
 - verifies the original plaintext tag row is hidden
@@ -218,7 +219,7 @@ This protects issue `#187`.
 - verifies `Open Selected` uses canonical `/t/<id>` URLs
 - verifies bulk download and bookmark actions only act on selected rows
 
-This protects issues `#195`, `#232`, `#250`, `#251`, and `#252`.
+This protects issues `#169`, `#195`, `#232`, `#250`, `#251`, and `#252`.
 
 `tests/unit/store.grayOut.test.ts`
 
