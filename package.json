@@ -14,11 +14,18 @@
         "watch": "npx gulp watch",
         "build": "npx gulp build",
         "release": "npx gulp release",
+        "test": "npm run test:unit",
+        "test:unit": "npm run build && vitest run",
+        "test:unit:watch": "vitest",
+        "test:smoke": "npm run build && playwright test",
+        "test:smoke:headed": "npm run build && playwright test --headed",
+        "test:install-browsers": "playwright install chromium firefox webkit",
         "version": "npm run release && git add .",
         "postversion": "git push && git push --tags",
         "lint-staged": "eslint --cache --fix"
     },
     "devDependencies": {
+        "@playwright/test": "^1.58.2",
         "@types/greasemonkey": "3.0.0",
         "@typescript-eslint/eslint-plugin": "^5.58.0",
         "@typescript-eslint/parser": "^5.58.0",
@@ -34,11 +41,13 @@
         "gulp-typescript": "^6.0.0-alpha.1",
         "gulp-uglify-es": "^3.0.0",
         "husky": "^8.0.0",
+        "jsdom": "^22.1.0",
         "lint-staged": "^13.2.1",
         "prettier": "^2.8.7",
         "pump": "^3.0.0",
         "sass": "^1.62.0",
-        "typescript": "5.0.4"
+        "typescript": "5.0.4",
+        "vitest": "^1.6.1"
     },
     "engines": {
         "node": "^19.0.0",
