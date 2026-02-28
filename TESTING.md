@@ -195,6 +195,14 @@ This protects the recent-gift limit behavior from issue `#198`.
 
 This protects the recent-gift store cleanup logic from issue `#198`.
 
+`tests/unit/home.hideNews.test.ts`
+
+- verifies homepage tidying removes the clock
+- verifies homepage tidying removes the disclaimer block
+- verifies unrelated homepage blocks are left alone
+
+This protects issue `#187`.
+
 `tests/unit/browse.features.test.ts`
 
 - verifies bookmark icon override adds the `mp_bookmarkOverride` body class when enabled
@@ -254,6 +262,7 @@ This file runs the same scenarios in Chromium, Firefox, and WebKit. It proves th
 
 Current smoke scenarios:
 
+- home page: homepage tidying removes the disclaimer while leaving unrelated blocks intact
 - new users page: `Select Max Ungifted` appears and selects the expected rows
 - freeleech page: sections collapse by default and expand on toggle
 - browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together

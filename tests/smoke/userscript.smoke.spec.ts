@@ -4,6 +4,19 @@ import { expect, test } from '@playwright/test';
 
 import { installGMStubs, loadFixturePage, loadUserscript } from '../helpers/playwright';
 
+test('home synthetic page hides the disclaimer when tidying the homepage', async ({ page }) => {
+    await installGMStubs(page, {
+        hideNews: true,
+        mp_version: '4.4.2',
+    });
+    await loadFixturePage(page, '/', 'tests/fixtures/home.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#mainBody .fpTime')).toHaveCount(0);
+    await expect(page.locator('#disclaimerBlock')).toHaveCount(0);
+    await expect(page.locator('#otherBlock')).toBeVisible();
+});
+
 test('new users synthetic page exposes max-ungifted selection', async ({ page }) => {
     await installGMStubs(page, {
         giftNewest: true,
