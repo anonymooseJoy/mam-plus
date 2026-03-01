@@ -315,6 +315,14 @@ This protects issue `#118`.
 
 This protects issue `#220`.
 
+`tests/unit/settings.preferencesTab.test.ts`
+
+- verifies native Preferences views gain an `MAM+` tab link without rendering the full MAM+ settings inline
+- verifies `?view=mamplus` renders the MAM+ settings in a dedicated tab view
+- verifies native MAM preference content is hidden when the MAM+ tab is active
+
+This protects issue `#258`.
+
 `tests/unit/store.grayOut.test.ts`
 
 - verifies E-VIP blocks VIP purchases
@@ -366,6 +374,7 @@ This file runs the same scenarios in Chromium, Firefox, and WebKit. It proves th
 Current smoke scenarios:
 
 - home page: homepage tidying removes the disclaimer while leaving unrelated blocks intact
+- preferences page: the dedicated `MAM+` Preferences tab renders and hides the native form content when active
 - new users page: `Select Max Ungifted` appears and selects the expected rows
 - freeleech page: sections collapse by default and expand on toggle
 - request page: hidden requester counts appear in the toggle label and update when hidden requesters are shown

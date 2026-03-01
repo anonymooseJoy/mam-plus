@@ -17,6 +17,26 @@ test('home synthetic page hides the disclaimer when tidying the homepage', async
     await expect(page.locator('#otherBlock')).toBeVisible();
 });
 
+test('preferences synthetic page exposes a dedicated MAM+ tab', async ({ page }) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+    });
+    await loadFixturePage(
+        page,
+        '/preferences/index.php?view=mamplus',
+        'tests/fixtures/preferences.html'
+    );
+    await loadUserscript(page);
+
+    await expect(
+        page.locator('a[href*="/preferences/index.php?view=mamplus"]')
+    ).toBeVisible();
+    await expect(page.locator('.mp_settingsHost')).toBeVisible();
+    await expect(page.locator('.mp_settingsHost h1')).toContainText('MAM+ Settings');
+    await expect(page.locator('#nativeSettingsTitle')).toBeHidden();
+    await expect(page.locator('#prefForm')).toBeHidden();
+});
+
 test('new users synthetic page exposes max-ungifted selection', async ({ page }) => {
     await installGMStubs(page, {
         giftNewest: true,
