@@ -67,6 +67,29 @@ test('request synthetic page shows hidden requester counts in the toggle label',
     await expect(page.locator('#req2')).toBeVisible();
 });
 
+test('request detail synthetic page adds WorldCat search buttons', async ({ page }) => {
+    await installGMStubs(page, {
+        mp_currentPage: 'request details',
+        mp_version: '4.4.2',
+        worldCatButtonReq: true,
+    });
+    await loadFixturePage(
+        page,
+        '/t/r/123',
+        'tests/fixtures/request-details.html'
+    );
+    await loadUserscript(page);
+
+    await expect(page.locator('.mp_wcRow')).toBeVisible();
+    await expect(page.locator('.mp_wcRow .mp_button_clone')).toHaveCount(4);
+    await expect(page.locator('.mp_wcRow .mp_button_clone').first()).toContainText(
+        'Title + Author'
+    );
+    await expect(page.locator('.mp_wcRow .mp_button_clone').last()).toContainText(
+        'Series'
+    );
+});
+
 test('browse synthetic page applies bookmark and filetype helpers', async ({ page }) => {
     await installGMStubs(page, {
         bookmarkIcons: true,
