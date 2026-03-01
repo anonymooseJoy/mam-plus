@@ -32,6 +32,110 @@ const isBookTorrentCategory = (): boolean => {
 };
 
 /**
+ * * Mirrors the torrent bookmark control next to the title.
+ */
+class MoveBookmarkButton implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup['Torrent Page'],
+        type: 'checkbox',
+        title: 'moveBookmarkButton',
+        desc: 'Move the torrent bookmark button next to the title',
+    };
+    private _tar: string = '#torDetMainCon .TorrentTitle';
+    private _proxyId: string = 'mp_torBookmarkProxy';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['torrent']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _init() {
+        const title = document.querySelector(this._tar) as HTMLElement | null;
+        if (title === null) {
+            return;
+        }
+
+        const proxy = this._ensureProxy(title);
+        const sourceHost = this._findSourceHost();
+        if (proxy === null || sourceHost === null) {
+            return;
+        }
+
+        proxy.addEventListener('click', (event) => {
+            event.preventDefault();
+            const source = this._findSourceButton();
+            if (source) {
+                source.click();
+                window.setTimeout(() => this._syncProxy(proxy), 0);
+            }
+        });
+
+        new MutationObserver(() => this._syncProxy(proxy)).observe(sourceHost, {
+            subtree: true,
+            childList: true,
+        });
+
+        this._syncProxy(proxy);
+    }
+
+    private _findSourceButton(): HTMLAnchorElement | null {
+        return document.querySelector(
+            '.torDetLeft a[id^="torBookmark"], .torDetLeft a[id^="torDeBookmark"]'
+        ) as HTMLAnchorElement | null;
+    }
+
+    private _findSourceHost(): HTMLElement | null {
+        return this._findSourceButton()?.closest('.torDetLeft') as HTMLElement | null;
+    }
+
+    private _ensureProxy(title: HTMLElement): HTMLAnchorElement | null {
+        let proxy = document.getElementById(this._proxyId) as HTMLAnchorElement | null;
+        if (proxy !== null) {
+            return proxy;
+        }
+
+        const parent = title.parentElement;
+        if (parent === null) {
+            return null;
+        }
+
+        proxy = document.createElement('a');
+        proxy.id = this._proxyId;
+        proxy.className = 'mp_plainBtn mp_torBookmarkProxy';
+        proxy.setAttribute('role', 'button');
+        proxy.setAttribute('href', '#');
+        title.insertAdjacentElement('afterend', proxy);
+        return proxy;
+    }
+
+    private _syncProxy(proxy: HTMLAnchorElement) {
+        const source = this._findSourceButton();
+        if (source === null) {
+            proxy.style.display = 'none';
+            return;
+        }
+
+        if (source.style.display !== 'none') {
+            source.style.display = 'none';
+        }
+
+        const isBookmarked = source.id.startsWith('torDeBookmark');
+        proxy.textContent = isBookmarked ? 'Remove bookmark' : 'Bookmark';
+        proxy.title = source.title || proxy.textContent;
+        proxy.setAttribute('aria-label', proxy.textContent);
+        proxy.setAttribute('data-bookmark-state', isBookmarked ? 'remove' : 'add');
+        proxy.style.display = '';
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
  * * Autofills the Gift box with a specified number of points.
  */
 class TorGiftDefault implements Feature {
