@@ -16,6 +16,23 @@ class ToggleHiddenRequesters implements Feature {
     private _searchList: NodeListOf<HTMLLIElement> | undefined;
     private _hide = true;
 
+    private _updateToggleLabel(hiddenCount: number) {
+        const toggleSwitch: HTMLDivElement = <HTMLDivElement>(
+            document.querySelector('#mp_showHidden')
+        );
+        if (!toggleSwitch) {
+            return;
+        }
+
+        if (this._hide && hiddenCount > 0) {
+            toggleSwitch.innerText = `Show Hidden (${hiddenCount} hidden)`;
+        } else if (this._hide) {
+            toggleSwitch.innerText = 'Show Hidden';
+        } else {
+            toggleSwitch.innerText = 'Hide Hidden';
+        }
+    }
+
     constructor() {
         Util.startFeature(this._settings, this._tar, ['request']).then((t) => {
             if (t) {
@@ -56,19 +73,19 @@ class ToggleHiddenRequesters implements Feature {
 
             if (this._hide) {
                 this._hide = false;
-                toggleSwitch.innerText = 'Hide Hidden';
                 hiddenList.forEach((item) => {
                     item.style.display = 'list-item';
                     item.style.opacity = '0.5';
                 });
             } else {
                 this._hide = true;
-                toggleSwitch.innerText = 'Show Hidden';
                 hiddenList.forEach((item) => {
                     item.style.display = 'none';
                     item.style.opacity = '0';
                 });
             }
+
+            this._updateToggleLabel(document.querySelectorAll('#torRows > .mp_hidden').length);
         });
     }
 
@@ -94,15 +111,25 @@ class ToggleHiddenRequesters implements Feature {
     }
 
     private _filterResults(list: NodeListOf<HTMLLIElement>) {
+        let hiddenCount = 0;
+
         list.forEach((request) => {
             const requester: HTMLAnchorElement | null = request.querySelector(
                 '.torRight a'
             );
             if (requester === null) {
-                request.style.display = 'none';
+                hiddenCount += 1;
                 request.classList.add('mp_hidden');
+                request.style.opacity = this._hide ? '0' : '0.5';
+                request.style.display = this._hide ? 'none' : 'list-item';
+            } else {
+                request.classList.remove('mp_hidden');
+                request.style.opacity = '';
+                request.style.display = '';
             }
         });
+
+        this._updateToggleLabel(hiddenCount);
     }
 
     get settings(): CheckboxSetting {
