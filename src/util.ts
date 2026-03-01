@@ -1,3 +1,10 @@
+interface CreateButtonOptions {
+    href?: string;
+    inside?: 'afterbegin' | 'beforeend';
+    order?: number;
+    target?: '_blank' | '_self';
+}
+
 /**
  * Class containing common utility methods
  *
@@ -232,42 +239,15 @@ class Util {
         }
     }
 
-    // TODO: Merge with `Util.createButton`
     /**
-     * Inserts a link button that is styled like a site button (ex. in tor details)
-     * @param tar The element the button should be added to
-     * @param url The URL the button will send you to
-     * @param text The text on the button
-     * @param order Optional: flex flow ordering
-     */
-    public static createLinkButton(
-        tar: HTMLElement,
-        url: string = 'none',
-        text: string,
-        order: number = 0
-    ): void {
-        // Create the button
-        const button: HTMLAnchorElement = document.createElement('a');
-        // Set up the button
-        button.classList.add('mp_button_clone');
-        if (url !== 'none') {
-            button.setAttribute('href', url);
-            button.setAttribute('target', '_blank');
-        }
-        button.innerText = text;
-        button.style.order = `${order}`;
-        // Inject the button
-        tar.insertBefore(button, tar.firstChild);
-    }
-
-    /**
-     * Inserts a non-linked button
+     * Inserts a button or button-styled link
      * @param id The ID of the button
      * @param text The text displayed in the button
      * @param type The HTML element to create. Default: `h1`
      * @param tar The HTML element the button will be `relative` to
      * @param relative The position of the button relative to the `tar`. Default: `afterend`
      * @param btnClass The classname of the element. Default: `mp_btn`
+     * @param options Optional link/placement metadata
      */
     public static createButton(
         id: string,
@@ -275,7 +255,8 @@ class Util {
         type: string = 'h1',
         tar: string | HTMLElement,
         relative: 'beforebegin' | 'afterend' = 'afterend',
-        btnClass: string = 'mp_btn'
+        btnClass: string = 'mp_btn',
+        options: CreateButtonOptions = {}
     ): Promise<HTMLElement> {
         return new Promise((resolve, reject) => {
             // Choose the new button insert location and insert elements
@@ -287,12 +268,30 @@ class Util {
             if (target === null) {
                 reject(`${tar} is null!`);
             } else {
-                target.insertAdjacentElement(relative, btn);
+                if (options.inside) {
+                    target.insertAdjacentElement(options.inside, btn);
+                } else {
+                    target.insertAdjacentElement(relative, btn);
+                }
                 Util.setAttr(btn, {
-                    id: `mp_${id}`,
                     class: btnClass,
                     role: 'button',
                 });
+                if (id !== '') {
+                    btn.id = `mp_${id}`;
+                }
+                if (type === 'a') {
+                    const anchor = btn as HTMLAnchorElement;
+                    if (options.href) {
+                        anchor.href = options.href;
+                    }
+                    if (options.target) {
+                        anchor.target = options.target;
+                    }
+                }
+                if (options.order !== undefined) {
+                    btn.style.order = `${options.order}`;
+                }
                 // Set initial button text
                 btn.innerHTML = text;
                 resolve(btn);
