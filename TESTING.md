@@ -215,6 +215,7 @@ This protects issue `#160`.
 
 - verifies the shoutbox preview button calls the site's preview endpoint
 - verifies the returned HTML is inserted into the shout preview pane
+- verifies the preview controls hide when the shoutbox enters fullscreen
 
 This protects issue `#179`.
 
@@ -237,6 +238,7 @@ This protects issue `#25`.
 - verifies the shoutbox settings toggle renders only shoutbox settings inline
 - verifies stored shoutbox values populate the embedded settings panel
 - verifies saving from the embedded panel writes updated GM settings
+- verifies the settings controls hide when the shoutbox enters fullscreen
 
 This protects issue `#14`.
 
@@ -317,6 +319,7 @@ Current smoke scenarios:
 - shoutbox page: the quick-edit controls open the newest editable shout through the site edit helper
 - shoutbox page: hovering a user link highlights that user's recent visible posts and clears the highlight when moving to another user
 - shoutbox page: the preview button renders the current shout through the site preview endpoint
+- shoutbox fullscreen: preview and settings controls are intentionally hidden
 - shoutbox fullscreen: QuickShout moves into the fullscreen overlay and back out when fullscreen is toggled
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
 - vault page: stale donation history is replaced even without a donate form

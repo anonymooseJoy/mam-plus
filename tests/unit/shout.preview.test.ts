@@ -47,4 +47,27 @@ describe('ShoutPreview', () => {
             'Rendered preview'
         );
     });
+
+    it('hides the preview controls when the shoutbox enters fullscreen', async () => {
+        const { document } = await loadUserscriptInJsdom({
+            gmValues: {
+                mp_version: '4.4.2',
+                shoutPreview: true,
+            },
+            html: readFileSync('tests/fixtures/shoutbox.html', 'utf8').replace(
+                'id="shoutbox"',
+                'id="shoutbox" style="position:fixed"'
+            ),
+            url: 'https://www.myanonamouse.net/shoutbox.php',
+        });
+
+        await waitFor(25);
+
+        const previewButton = document.getElementById(
+            'mp_shoutPreviewBtn'
+        ) as HTMLButtonElement | null;
+        const previewRoot = document.getElementById('mp_shoutPreview') as HTMLDivElement | null;
+        expect(previewButton?.style.display).toBe('none');
+        expect(previewRoot?.style.display).toBe('none');
+    });
 });

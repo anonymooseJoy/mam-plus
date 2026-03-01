@@ -1258,6 +1258,8 @@ class ShoutPreview implements Feature {
             return;
         }
 
+        const isFullscreenShoutbox = () => shoutBox?.style.position === 'fixed';
+
         const syncFullscreenBodyHeight = () => {
             if (
                 !shoutBox ||
@@ -1278,10 +1280,24 @@ class ShoutPreview implements Feature {
                 shoutBox.clientHeight -
                 shoutForm.offsetHeight -
                 shoutNotifs.offsetHeight -
-                (previewRoot.style.display !== 'none' ? previewRoot.offsetHeight : 0) -
+                (previewRoot.style.display !== 'none' && !isFullscreenShoutbox()
+                    ? previewRoot.offsetHeight
+                    : 0) -
                 shoutTabs.offsetHeight -
                 extraHeight;
             shoutBody.style.height = `${Math.max(fullHeight, 0)}px`;
+        };
+
+        const syncPreviewVisibility = () => {
+            const isFullscreen = isFullscreenShoutbox();
+            previewButton.style.display = isFullscreen ? 'none' : '';
+
+            if (isFullscreen) {
+                previewRoot.style.display = 'none';
+            }
+
+            previewButton.disabled = isFullscreen || !shoutInput.value.trim() || isLoadingPreview;
+            syncFullscreenBodyHeight();
         };
 
         previewButton.id = 'mp_shoutPreviewBtn';
@@ -1343,7 +1359,8 @@ class ShoutPreview implements Feature {
         });
 
         shoutInput.addEventListener('input', () => {
-            previewButton.disabled = !shoutInput.value.trim();
+            previewButton.disabled =
+                isFullscreenShoutbox() || !shoutInput.value.trim() || isLoadingPreview;
 
             if (previewRoot.style.display !== 'none') {
                 previewBody.className = 'mp_shoutPreviewBody mp_shoutPreview_stale';
@@ -1352,14 +1369,13 @@ class ShoutPreview implements Feature {
             }
         });
 
-        previewButton.disabled = !shoutInput.value.trim();
-
         shoutForm.appendChild(previewButton);
         shoutNotifs.insertAdjacentElement('afterend', previewRoot);
+        syncPreviewVisibility();
 
         if (shoutBox) {
             new MutationObserver(() => {
-                syncFullscreenBodyHeight();
+                syncPreviewVisibility();
             }).observe(shoutBox, {
                 attributeFilter: ['class', 'style'],
                 attributes: true,
@@ -1518,12 +1534,24 @@ class ShoutboxSettings {
 
         const shoutForm = <HTMLElement | null>document.getElementById('sbform');
         const shoutNotifs = <HTMLElement | null>document.getElementById('sbNotifs');
+        const shoutBox = <HTMLElement | null>document.getElementById('shoutbox');
         if (!shoutForm || !shoutNotifs) {
             return;
         }
 
         const toggleButton = document.createElement('button');
         const panel = document.createElement('div');
+        const isFullscreenShoutbox = () => shoutBox?.style.position === 'fixed';
+
+        const syncSettingsVisibility = () => {
+            const isFullscreen = isFullscreenShoutbox();
+            toggleButton.style.display = isFullscreen ? 'none' : '';
+
+            if (isFullscreen) {
+                panel.style.display = 'none';
+                toggleButton.textContent = 'Settings';
+            }
+        };
 
         toggleButton.id = 'mp_shoutSettingsToggle';
         toggleButton.type = 'button';
@@ -1559,5 +1587,15 @@ class ShoutboxSettings {
 
         shoutForm.appendChild(toggleButton);
         shoutNotifs.insertAdjacentElement('afterend', panel);
+        syncSettingsVisibility();
+
+        if (shoutBox) {
+            new MutationObserver(() => {
+                syncSettingsVisibility();
+            }).observe(shoutBox, {
+                attributeFilter: ['class', 'style'],
+                attributes: true,
+            });
+        }
     }
 }

@@ -51,4 +51,27 @@ describe('ShoutboxSettings', () => {
         expect(gmStore.get('mutedUsers')).toBe(true);
         expect(gmStore.get('mutedUsers_val')).toBe('gardenshade');
     });
+
+    it('hides the settings controls when the shoutbox enters fullscreen', async () => {
+        const { document } = await loadUserscriptInJsdom({
+            gmValues: {
+                mp_version: '4.4.2',
+            },
+            html: readFileSync('tests/fixtures/shoutbox.html', 'utf8').replace(
+                'id="shoutbox"',
+                'id="shoutbox" style="position:fixed"'
+            ),
+            url: 'https://www.myanonamouse.net/shoutbox.php',
+        });
+
+        await waitFor(25);
+
+        const toggle = document.getElementById(
+            'mp_shoutSettingsToggle'
+        ) as HTMLButtonElement | null;
+        const panel = document.getElementById('mp_shoutSettingsPanel') as HTMLDivElement | null;
+
+        expect(toggle?.style.display).toBe('none');
+        expect(panel?.style.display).toBe('none');
+    });
 });
