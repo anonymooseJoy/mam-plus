@@ -237,6 +237,19 @@ test('shoutbox synthetic page highlights recent posts from the hovered user', as
     await expect(page.locator('#sbid100 .shoutRow')).toHaveClass(/mp_hoverShoutUser/);
 });
 
+test('shoutbox synthetic page displays user IDs inline', async ({ page }) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        showShoutUID: true,
+    });
+    await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#sbid100 .mp_shoutUid')).toContainText('[123]');
+    await expect(page.locator('#sbid200 .mp_shoutUid')).toContainText('[999]');
+    await expect(page.locator('#sbid250 .mp_shoutUid')).toContainText('[999]');
+});
+
 test('shoutbox synthetic page can open and save shoutbox settings in place', async ({
     page,
 }) => {

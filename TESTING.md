@@ -233,6 +233,13 @@ This protects issue `#131`.
 
 This protects issue `#25`.
 
+`tests/unit/shout.showUserIds.test.ts`
+
+- verifies shoutbox usernames get an inline UID label derived from the shout row/user link
+- verifies the UID label is only added once per shout row
+
+This protects issue `#229`.
+
 `tests/unit/shout.settingsPanel.test.ts`
 
 - verifies the shoutbox settings toggle renders only shoutbox settings inline
@@ -344,6 +351,7 @@ Current smoke scenarios:
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount
 - shoutbox page: the quick-edit controls open the newest editable shout through the site edit helper
 - shoutbox page: hovering a user link highlights that user's recent visible posts and clears the highlight when moving to another user
+- shoutbox page: user IDs are displayed inline next to shoutbox usernames
 - shoutbox page: the preview button renders the current shout through the site preview endpoint
 - shoutbox fullscreen: preview and settings controls are intentionally hidden
 - shoutbox fullscreen: QuickShout moves into the fullscreen overlay and back out when fullscreen is toggled
