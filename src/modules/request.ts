@@ -251,7 +251,7 @@ class PlaintextRequest implements Feature {
                 throw new Error(err);
             });
 
-        console.log('[M+] Inserted plaintext request results!');
+        MP.log('[M+] Inserted plaintext request results!');
     }
 
     /**
@@ -287,7 +287,7 @@ class PlaintextRequest implements Feature {
             );
 
             if (rawTitle === null) {
-                console.warn('Error Node:', node);
+                MP.warn('Error Node:', node);
                 throw new Error(`Result title should not be null`);
             } else {
                 title = rawTitle.textContent!.trim();
@@ -326,7 +326,7 @@ class PlaintextRequest implements Feature {
     }
 
     private _getRequestList = (): Promise<NodeListOf<HTMLLIElement>> => {
-        if (MP.DEBUG) console.log(`Shared.getSearchList( )`);
+        if (MP.DEBUG) MP.log(`Shared.getSearchList( )`);
         return new Promise((resolve, reject) => {
             // Wait for the request results to exist
             Check.elemLoad('#torRows .torRow a').then(() => {

@@ -113,7 +113,7 @@ class Settings {
         scopeFilter?: SettingGroup[]
     ): Promise<SettingGlobObject> {
         if (MP.DEBUG) {
-            console.log('_getScopes(', settings, ',', scopeFilter, ')');
+            MP.log('_getScopes(', settings, ',', scopeFilter, ')');
         }
         return new Promise((resolve) => {
             const scopeList: SettingGlobObject = {};
@@ -144,7 +144,7 @@ class Settings {
         page: SettingGlobObject,
         options: Required<SettingsRenderOptions>
     ): Promise<string> {
-        if (MP.DEBUG) console.log('_buildTable(', page, ',', options, ')');
+        if (MP.DEBUG) MP.log('_buildTable(', page, ',', options, ')');
         return new Promise((resolve) => {
             let outp = '<tbody>';
 
@@ -195,14 +195,14 @@ class Settings {
     private static _getSettings(page: SettingGlobObject, root: ParentNode) {
         const allValues: string[] = GM_listValues();
         if (MP.DEBUG) {
-            console.log('_getSettings(', page, ')\nStored GM keys:', allValues);
+            MP.log('_getSettings(', page, ')\nStored GM keys:', allValues);
         }
         Object.keys(page).forEach((scope) => {
             Object.keys(page[Number(scope)]).forEach((setting) => {
                 const pref = page[Number(scope)][Number(setting)];
 
                 if (MP.DEBUG) {
-                    console.log(
+                    MP.log(
                         'Pref:',
                         pref.title,
                         '| Set:',
@@ -240,7 +240,7 @@ class Settings {
     }
 
     private static _setSettings(obj: SettingGlobObject, root: ParentNode) {
-        if (MP.DEBUG) console.log(`_setSettings(`, obj, ')');
+        if (MP.DEBUG) MP.log(`_setSettings(`, obj, ')');
         Object.keys(obj).forEach((scope) => {
             Object.keys(obj[Number(scope)]).forEach((setting) => {
                 const pref = obj[Number(scope)][Number(setting)];
@@ -275,7 +275,7 @@ class Settings {
                 }
             });
         });
-        console.log('[M+] Saved!');
+        MP.log('[M+] Saved!');
     }
 
     private static _copySettings(): string {
@@ -292,12 +292,12 @@ class Settings {
     }
 
     private static _pasteSettings(payload: string) {
-        if (MP.DEBUG) console.group(`_pasteSettings( )`);
+        if (MP.DEBUG) MP.group(`_pasteSettings( )`);
         const settings = JSON.parse(payload);
         settings.forEach((tuple: [string, string][]) => {
             if (tuple[1]) {
                 GM_setValue(`${tuple[0]}`, `${tuple[1]}`);
-                if (MP.DEBUG) console.log(tuple[0], ': ', tuple[1]);
+                if (MP.DEBUG) MP.log(tuple[0], ': ', tuple[1]);
             }
         });
     }
@@ -309,7 +309,7 @@ class Settings {
         root: ParentNode,
         saveHint: string
     ) {
-        if (MP.DEBUG) console.group(`_saveSettings()`);
+        if (MP.DEBUG) MP.group(`_saveSettings()`);
 
         const savestate = <HTMLSpanElement | null>root.querySelector('span.mp_savestate');
         const gmValues: string[] = GM_listValues();
@@ -320,7 +320,7 @@ class Settings {
         }
         window.clearTimeout(timer);
 
-        console.log('[M+] Saving...');
+        MP.log('[M+] Saving...');
 
         for (const feature in gmValues) {
             if (typeof gmValues[feature] !== 'function') {
@@ -341,11 +341,11 @@ class Settings {
                     savestate.style.opacity = '0';
                 }, 2345);
             } catch (e) {
-                if (MP.DEBUG) console.warn(e);
+                if (MP.DEBUG) MP.warn(e);
             }
         }
 
-        if (MP.DEBUG) console.groupEnd();
+        if (MP.DEBUG) MP.groupEnd();
     }
 
     public static async renderInto(
@@ -394,7 +394,7 @@ class Settings {
                 Util.clipboardifyBtn(copyBtn, this._copySettings());
             }
         } catch (err) {
-            if (MP.DEBUG) console.warn(err);
+            if (MP.DEBUG) MP.warn(err);
         }
     }
 
@@ -406,11 +406,11 @@ class Settings {
     public static async init(result: boolean, settings: AnyFeature[]) {
         if (result === true) {
             if (MP.DEBUG) {
-                console.group(`new Settings()`);
+                MP.group(`new Settings()`);
             }
 
             await Check.elemLoad('#mainBody > table').then(() => {
-                if (MP.DEBUG) console.log(`[M+] Starting to build Settings table...`);
+                if (MP.DEBUG) MP.log(`[M+] Starting to build Settings table...`);
                 const settingNav = document.querySelector(
                     '#mainBody > table'
                 ) as HTMLTableElement | null;
@@ -423,9 +423,9 @@ class Settings {
                 this._injectPreferencesTab(settingNav, isMamPlusView);
 
                 if (!isMamPlusView) {
-                    console.log('[M+] Added the MAM+ Preferences tab!');
+                    MP.log('[M+] Added the MAM+ Preferences tab!');
                     if (MP.DEBUG) {
-                        console.groupEnd();
+                        MP.groupEnd();
                     }
                     return;
                 }
@@ -445,9 +445,9 @@ class Settings {
                     saveText: 'Save M+ Settings',
                     titleText: 'MAM+ Settings',
                 }).then(() => {
-                    console.log('[M+] Added the MAM+ Settings tab!');
+                    MP.log('[M+] Added the MAM+ Settings tab!');
                     if (MP.DEBUG) {
-                        console.groupEnd();
+                        MP.groupEnd();
                     }
                 });
             });

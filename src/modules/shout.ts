@@ -154,7 +154,7 @@ class PriorityUsers implements Feature {
             throw new Error('Userlist is not defined!');
         }
         ProcessShouts.watchShoutbox(this._tar, this._priorityUsers, this._userType);
-        console.log(`[M+] Highlighting users in the shoutbox...`);
+        MP.log(`[M+] Highlighting users in the shoutbox...`);
     }
 
     get settings(): TextboxSetting {
@@ -185,7 +185,7 @@ class PriorityStyle implements Feature {
     }
 
     private async _init() {
-        console.log(`[M+] Setting custom highlight for priority users...`);
+        MP.log(`[M+] Setting custom highlight for priority users...`);
     }
 
     get settings(): TextboxSetting {
@@ -225,7 +225,7 @@ class MutedUsers implements Feature {
             throw new Error('Userlist is not defined!');
         }
         ProcessShouts.watchShoutbox(this._tar, this._mutedUsers, this._userType);
-        console.log(`[M+] Obscuring muted users...`);
+        MP.log(`[M+] Obscuring muted users...`);
     }
 
     get settings(): TextboxSetting {
@@ -254,7 +254,7 @@ class HoverShoutUserPosts implements Feature {
     }
 
     private _init() {
-        console.log(`[M+] Adding shout hover user highlighting...`);
+        MP.log(`[M+] Adding shout hover user highlighting...`);
 
         const shoutboxBody = document.getElementById('sbf');
         if (!shoutboxBody) {
@@ -447,7 +447,7 @@ class ShowShoutUID implements Feature {
     }
 
     private _init() {
-        console.log(`[M+] Displaying shoutbox user IDs...`);
+        MP.log(`[M+] Displaying shoutbox user IDs...`);
 
         const shoutboxBody = document.getElementById('sbf');
         if (!shoutboxBody) {
@@ -551,7 +551,7 @@ class GiftButton implements Feature {
     }
 
     private async _init() {
-        console.log(`[M+] Initialized Gift Button.`);
+        MP.log(`[M+] Initialized Gift Button.`);
         const sbfDiv = <HTMLDivElement>document.getElementById('sbf')!;
         const sbfDivChild = sbfDiv!.firstChild;
 
@@ -580,7 +580,7 @@ class GiftButton implements Feature {
                 return;
             }
             //get the Menu after it pops up
-            console.log(`[M+] Adding Gift Button...`);
+            MP.log(`[M+] Adding Gift Button...`);
             const popupMenu: HTMLElement | null = document.getElementById('sbMenuMain');
             do {
                 await Util.sleep(5);
@@ -691,7 +691,7 @@ class GiftButton implements Feature {
                     giftButton.querySelector('button')!.disabled = false;
                 }
             });
-            console.log(`[M+] Gift Button added!`);
+            MP.log(`[M+] Gift Button added!`);
         });
     }
 
@@ -838,7 +838,7 @@ class ShoutMenuUserActions implements Feature {
     }
 
     private async _init() {
-        console.log(`[M+] Adding shoutbox menu user actions...`);
+        MP.log(`[M+] Adding shoutbox menu user actions...`);
 
         const sbfDiv = <HTMLDivElement | null>document.getElementById('sbf');
         if (!sbfDiv) {
@@ -940,7 +940,7 @@ class QuickShout implements Feature {
     }
 
     private async _init() {
-        console.log(`[M+] Adding Quick Shout Buttons...`);
+        MP.log(`[M+] Adding Quick Shout Buttons...`);
         //get the main shoutbox input field
         const replyBox = <HTMLInputElement>document.getElementById('shbox_text');
         //empty JSON was giving me issues, so decided to just make an intro for when the GM variable is empty
@@ -1191,7 +1191,7 @@ class QuickShout implements Feature {
                         //TODO: this may or may not be necessary, but was having issues with the unique symbol still randomly showing up after saves
                         comboBoxOption.value = comboBoxOption.value.replace(/ಠ/g, ' ');
                         //add to the list
-                        // console.log(comboBoxOption);
+                        // MP.log(comboBoxOption);
 
                         comboBoxList.appendChild(comboBoxOption);
                     });
@@ -1345,7 +1345,7 @@ class ShoutPreview implements Feature {
     }
 
     private async _init() {
-        console.log(`[M+] Adding Shoutbox Preview...`);
+        MP.log(`[M+] Adding Shoutbox Preview...`);
 
         const shoutForm = <HTMLElement | null>document.getElementById('sbform');
         const shoutInput = <HTMLInputElement | null>document.getElementById('shbox_text');
@@ -1513,7 +1513,7 @@ class QuickEditShout implements Feature {
     }
 
     private async _init() {
-        console.log(`[M+] Adding quick shout edit shortcut...`);
+        MP.log(`[M+] Adding quick shout edit shortcut...`);
 
         const shoutInput = <HTMLInputElement | null>document.getElementById('shbox_text');
         const shoutForm = <HTMLElement | null>document.getElementById('sbform');
@@ -1634,7 +1634,7 @@ class ShoutboxSettings {
     }
 
     private async _init() {
-        console.log(`[M+] Adding shoutbox settings panel...`);
+        MP.log(`[M+] Adding shoutbox settings panel...`);
 
         const shoutForm = <HTMLElement | null>document.getElementById('sbform');
         const shoutNotifs = <HTMLElement | null>document.getElementById('sbNotifs');

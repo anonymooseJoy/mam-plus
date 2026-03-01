@@ -23,7 +23,7 @@ class SimpleVault implements Feature {
     private async _init() {
         const subPage: string = GM_getValue('mp_currentPage');
         const page = <HTMLElement>document.querySelector(this._tar);
-        console.group(`Applying Vault (${subPage}) settings...`);
+        MP.group(`Applying Vault (${subPage}) settings...`);
 
         // Clone the important parts and reset the page
         const donateBtn: HTMLFormElement | null = page.querySelector('form');
@@ -51,7 +51,7 @@ class SimpleVault implements Feature {
         } else {
             page.style.paddingBottom = '25px';
         }
-        console.log('[M+] Simplified the vault page!');
+        MP.log('[M+] Simplified the vault page!');
     }
 
     get settings(): CheckboxSetting {
@@ -85,12 +85,12 @@ class PotHistory implements Feature {
 
         const potPageResp = await fetch('/millionaires/pot.php');
         if (!potPageResp.ok) {
-            console.group(
+            MP.group(
                 `failed to get /millionaires/pot.php: ${potPageResp.status}/${potPageResp.statusText}`
             );
             return;
         }
-        console.group(`Applying Vault (${subPage}) settings...`);
+        MP.group(`Applying Vault (${subPage}) settings...`);
         const potPageText: string = await potPageResp.text();
         const parser = new DOMParser();
         const potPage: Document = parser.parseFromString(potPageText, 'text/html');
@@ -116,7 +116,7 @@ class PotHistory implements Feature {
                 page.appendChild(newTable);
             }
         }
-        console.log('[M+] Added the donation history to the donation page!');
+        MP.log('[M+] Added the donation history to the donation page!');
     }
 
     get settings(): CheckboxSetting {

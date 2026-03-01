@@ -20,7 +20,7 @@ class Style {
         // If the previous theme object exists, assume the current theme is identical
         if (this._prevTheme !== undefined) {
             this._theme = this._prevTheme;
-        } else if (MP.DEBUG) console.warn('no previous theme');
+        } else if (MP.DEBUG) MP.warn('no previous theme');
 
         // Dev builds inline CSS so local Sass changes are testable without a machine-specific file URL.
         this._cssData = ##meta_cssdata## || GM_getResourceText('MP_CSS');
@@ -50,7 +50,7 @@ class Style {
             if (body) {
                 body.classList.add(`mp_${this._theme}`);
             } else if (MP.DEBUG) {
-                console.warn(`Body is ${body}`);
+                MP.warn(`Body is ${body}`);
             }
         });
     }
@@ -64,7 +64,7 @@ class Style {
             style.innerText = this._cssData !== undefined ? this._cssData : '';
             document.querySelector('head')!.appendChild(style);
         } else if (MP.DEBUG)
-            console.warn(`an element with the id "${id}" already exists`);
+            MP.warn(`an element with the id "${id}" already exists`);
     }
 
     /** Returns the previous theme object if it exists */
@@ -84,7 +84,7 @@ class Style {
                 .getAttribute('href');
             if (typeof themeURL === 'string') {
                 resolve(themeURL);
-            } else if (MP.DEBUG) console.warn(`themeUrl is not a string: ${themeURL}`);
+            } else if (MP.DEBUG) MP.warn(`themeUrl is not a string: ${themeURL}`);
         });
     }
 }

@@ -17,7 +17,7 @@ class Shared {
         tar: string,
         settingTitle: string
     ): Promise<number | undefined> => {
-        if (MP.DEBUG) console.log(`Shared.fillGiftBox( ${tar}, ${settingTitle} )`);
+        if (MP.DEBUG) MP.log(`Shared.fillGiftBox( ${tar}, ${settingTitle} )`);
 
         return new Promise((resolve) => {
             Check.elemLoad(tar).then(() => {
@@ -45,7 +45,7 @@ class Shared {
      * Returns list of all results from Browse page
      */
     public getSearchList = (): Promise<NodeListOf<HTMLTableRowElement>> => {
-        if (MP.DEBUG) console.log(`Shared.getSearchList( )`);
+        if (MP.DEBUG) MP.log(`Shared.getSearchList( )`);
         return new Promise((resolve, reject) => {
             // Wait for the search results to exist
             Check.elemLoad('#ssr tr[id ^= "tdr"] td').then(() => {
@@ -69,7 +69,7 @@ class Shared {
         seriesData: NodeListOf<HTMLAnchorElement> | null,
         target: HTMLDivElement | null
     ) => {
-        console.log('[M+] Adding the MAM-to-Goodreads buttons...');
+        MP.log('[M+] Adding the MAM-to-Goodreads buttons...');
         let seriesP: Promise<string[]>, authorP: Promise<string[]>;
         let authors = '';
 
@@ -99,7 +99,7 @@ class Shared {
                     Util.createLinkButton(buttonTar, url, buttonTitle, 4);
                 });
             } else {
-                console.warn('No series data detected!');
+                MP.warn('No series data detected!');
             }
         });
 
@@ -111,7 +111,7 @@ class Shared {
                     const url = Util.goodreads.buildSearchURL('author', authors);
                     Util.createLinkButton(buttonTar, url, 'Author', 3);
                 } else {
-                    console.warn('No author data detected!');
+                    MP.warn('No author data detected!');
                 }
             })
             // Build Title buttons
@@ -128,16 +128,16 @@ class Shared {
                         );
                         Util.createLinkButton(buttonTar, bothURL, 'Title + Author', 1);
                     } else if (MP.DEBUG) {
-                        console.log(
+                        MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
                         );
                     }
                 } else {
-                    console.warn('No title data detected!');
+                    MP.warn('No title data detected!');
                 }
             });
 
-        console.log(`[M+] Added the MAM-to-Goodreads buttons!`);
+        MP.log(`[M+] Added the MAM-to-Goodreads buttons!`);
     };
 
     public audibleButtons = async (
@@ -146,7 +146,7 @@ class Shared {
         seriesData: NodeListOf<HTMLAnchorElement> | null,
         target: HTMLDivElement | null
     ) => {
-        console.log('[M+] Adding the MAM-to-Audible buttons...');
+        MP.log('[M+] Adding the MAM-to-Audible buttons...');
         let seriesP: Promise<string[]>, authorP: Promise<string[]>;
         let authors = '';
 
@@ -176,7 +176,7 @@ class Shared {
                     Util.createLinkButton(buttonTar, url, buttonTitle, 4);
                 });
             } else {
-                console.warn('No series data detected!');
+                MP.warn('No series data detected!');
             }
         });
 
@@ -188,7 +188,7 @@ class Shared {
                     const url = `https://www.audible.com/search?author_author=${authors}`;
                     Util.createLinkButton(buttonTar, url, 'Author', 3);
                 } else {
-                    console.warn('No author data detected!');
+                    MP.warn('No author data detected!');
                 }
             })
             // Build Title buttons
@@ -202,16 +202,16 @@ class Shared {
                         const bothURL = `https://www.audible.com/search?title=${title}&author_author=${authors}`;
                         Util.createLinkButton(buttonTar, bothURL, 'Title + Author', 1);
                     } else if (MP.DEBUG) {
-                        console.log(
+                        MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
                         );
                     }
                 } else {
-                    console.warn('No title data detected!');
+                    MP.warn('No title data detected!');
                 }
             });
 
-        console.log(`[M+] Added the MAM-to-Audible buttons!`);
+        MP.log(`[M+] Added the MAM-to-Audible buttons!`);
     };
 
     // TODO: Switch to StoryGraph API once it becomes available? Or advanced search
@@ -221,7 +221,7 @@ class Shared {
         seriesData: NodeListOf<HTMLAnchorElement> | null,
         target: HTMLDivElement | null
     ) => {
-        console.log('[M+] Adding the MAM-to-StoryGraph buttons...');
+        MP.log('[M+] Adding the MAM-to-StoryGraph buttons...');
         let seriesP: Promise<string[]>, authorP: Promise<string[]>;
         let authors = '';
 
@@ -251,7 +251,7 @@ class Shared {
                     Util.createLinkButton(buttonTar, url, buttonTitle, 4);
                 });
             } else {
-                console.warn('No series data detected!');
+                MP.warn('No series data detected!');
             }
         });
 
@@ -263,7 +263,7 @@ class Shared {
                     const url = `https://app.thestorygraph.com/browse?search_term=${authors}`;
                     Util.createLinkButton(buttonTar, url, 'Author', 3);
                 } else {
-                    console.warn('No author data detected!');
+                    MP.warn('No author data detected!');
                 }
             })
             // Build Title buttons
@@ -277,16 +277,16 @@ class Shared {
                         const bothURL = `https://app.thestorygraph.com/browse?search_term=${title} ${authors}`;
                         Util.createLinkButton(buttonTar, bothURL, 'Title + Author', 1);
                     } else if (MP.DEBUG) {
-                        console.log(
+                        MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
                         );
                     }
                 } else {
-                    console.warn('No title data detected!');
+                    MP.warn('No title data detected!');
                 }
             });
 
-        console.log(`[M+] Added the MAM-to-StoryGraph buttons!`);
+        MP.log(`[M+] Added the MAM-to-StoryGraph buttons!`);
     };
 
     public worldCatButtons = async (
@@ -295,7 +295,7 @@ class Shared {
         seriesData: NodeListOf<HTMLAnchorElement> | null,
         target: HTMLDivElement | null
     ) => {
-        console.log('[M+] Adding the MAM-to-WorldCat buttons...');
+        MP.log('[M+] Adding the MAM-to-WorldCat buttons...');
         let seriesP: Promise<string[]>, authorP: Promise<string[]>;
         let authors = '';
 
@@ -326,7 +326,7 @@ class Shared {
                     Util.createLinkButton(buttonTar, buildWorldCatURL(item), buttonTitle, 4);
                 });
             } else {
-                console.warn('No series data detected!');
+                MP.warn('No series data detected!');
             }
         });
 
@@ -342,7 +342,7 @@ class Shared {
                         3
                     );
                 } else {
-                    console.warn('No author data detected!');
+                    MP.warn('No author data detected!');
                 }
             })
             // Build Title buttons
@@ -359,16 +359,16 @@ class Shared {
                             1
                         );
                     } else if (MP.DEBUG) {
-                        console.log(
+                        MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
                         );
                     }
                 } else {
-                    console.warn('No title data detected!');
+                    MP.warn('No title data detected!');
                 }
             });
 
-        console.log(`[M+] Added the MAM-to-WorldCat buttons!`);
+        MP.log(`[M+] Added the MAM-to-WorldCat buttons!`);
     };
 
     public getRatioProtectLevels = async () => {
