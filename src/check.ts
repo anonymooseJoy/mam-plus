@@ -170,7 +170,10 @@ class Check {
                     store: () => 'store',
                     freeleech: () => 'freeleech',
                     millionaires: () => 'vault',
-                    t: () => 'torrent',
+                    t: () => {
+                        if (page[1] === 'r') return 'request details';
+                        return 'torrent';
+                    },
                     u: () => 'user',
                     f: () => {
                         if (page[1] === 't') return 'forum thread';

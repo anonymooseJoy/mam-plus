@@ -46,6 +46,7 @@ class InitFeatures {
 
         // Initialize Request Page functions
         new GoodreadsButtonReq();
+        new WorldCatButtonReq();
         new ToggleHiddenRequesters();
         new PlaintextRequest();
 

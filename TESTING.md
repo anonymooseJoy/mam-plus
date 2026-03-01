@@ -307,6 +307,14 @@ This protects issues `#118`, `#169`, `#195`, `#232`, `#250`, `#251`, and `#252`.
 
 This protects issue `#118`.
 
+`tests/unit/request.worldCat.test.ts`
+
+- verifies request-detail pages gain a `Search WorldCat` row
+- verifies WorldCat buttons are generated for title, author, title + author, and series
+- verifies the generated links use the expected WorldCat search URLs
+
+This protects issue `#220`.
+
 `tests/unit/store.grayOut.test.ts`
 
 - verifies E-VIP blocks VIP purchases
@@ -353,6 +361,7 @@ Current smoke scenarios:
 - new users page: `Select Max Ungifted` appears and selects the expected rows
 - freeleech page: sections collapse by default and expand on toggle
 - request page: hidden requester counts appear in the toggle label and update when hidden requesters are shown
+- request detail page: WorldCat search buttons are injected for title, author, title + author, and series
 - browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together
 - store page: unaffordable purchases are disabled while affordable ones remain enabled, and target-ratio upload credit guidance is displayed
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount

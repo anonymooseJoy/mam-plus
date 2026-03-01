@@ -289,6 +289,88 @@ class Shared {
         console.log(`[M+] Added the MAM-to-StoryGraph buttons!`);
     };
 
+    public worldCatButtons = async (
+        bookData: HTMLSpanElement | null,
+        authorData: NodeListOf<HTMLAnchorElement> | null,
+        seriesData: NodeListOf<HTMLAnchorElement> | null,
+        target: HTMLDivElement | null
+    ) => {
+        console.log('[M+] Adding the MAM-to-WorldCat buttons...');
+        let seriesP: Promise<string[]>, authorP: Promise<string[]>;
+        let authors = '';
+
+        Util.addTorDetailsRow(target, 'Search WorldCat', 'mp_wcRow');
+
+        await Promise.all([
+            (seriesP = Util.getBookSeries(seriesData)),
+            (authorP = Util.getBookAuthors(authorData)),
+        ]);
+
+        await Check.elemLoad('.mp_wcRow .flex');
+
+        const buttonTar: HTMLSpanElement = <HTMLSpanElement>(
+            document.querySelector('.mp_wcRow .flex')
+        );
+        if (buttonTar === null) {
+            throw new Error('Button row cannot be targeted!');
+        }
+
+        const buildWorldCatURL = (query: string) =>
+            `https://search.worldcat.org/search?q=${encodeURIComponent(query)}`;
+
+        // Build Series buttons
+        seriesP.then((ser) => {
+            if (ser.length > 0) {
+                ser.forEach((item) => {
+                    const buttonTitle = ser.length > 1 ? `Series: ${item}` : 'Series';
+                    Util.createLinkButton(buttonTar, buildWorldCatURL(item), buttonTitle, 4);
+                });
+            } else {
+                console.warn('No series data detected!');
+            }
+        });
+
+        // Build Author button
+        authorP
+            .then((auth) => {
+                if (auth.length > 0) {
+                    authors = auth.join(' ');
+                    Util.createLinkButton(
+                        buttonTar,
+                        buildWorldCatURL(authors),
+                        'Author',
+                        3
+                    );
+                } else {
+                    console.warn('No author data detected!');
+                }
+            })
+            // Build Title buttons
+            .then(async () => {
+                const title = await Util.getBookTitle(bookData, authors);
+                if (title !== '') {
+                    Util.createLinkButton(buttonTar, buildWorldCatURL(title), 'Title', 2);
+                    // If a title and author both exist, make a Title + Author button
+                    if (authors !== '') {
+                        Util.createLinkButton(
+                            buttonTar,
+                            buildWorldCatURL(`${title} ${authors}`),
+                            'Title + Author',
+                            1
+                        );
+                    } else if (MP.DEBUG) {
+                        console.log(
+                            `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
+                        );
+                    }
+                } else {
+                    console.warn('No title data detected!');
+                }
+            });
+
+        console.log(`[M+] Added the MAM-to-WorldCat buttons!`);
+    };
+
     public getRatioProtectLevels = async () => {
         let l1 = parseFloat(GM_getValue('ratioProtectL1_val'));
         let l2 = parseFloat(GM_getValue('ratioProtectL2_val'));

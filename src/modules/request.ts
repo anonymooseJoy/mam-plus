@@ -363,7 +363,7 @@ class GoodreadsButtonReq implements Feature {
         scope: SettingGroup.Requests,
         desc: 'Enable MAM-to-Goodreads buttons for requests',
     };
-    private _tar: string = '#fillTorrent';
+    private _tar: string = '#torDetMainCon';
     private _share = new Shared();
     constructor() {
         Util.startFeature(this._settings, this._tar, ['request details']).then((t) => {
@@ -383,9 +383,44 @@ class GoodreadsButtonReq implements Feature {
         const seriesData: NodeListOf<HTMLAnchorElement> | null = reqRows['Series:']
             ? reqRows['Series:'].querySelectorAll('a')
             : null;
-        const target: HTMLDivElement | null = reqRows['Release Date'];
+        const target: HTMLDivElement | null =
+            reqRows['Release Date'] || reqRows['Release Date:'];
         // Generate buttons
         this._share.goodreadsButtons(bookData, authorData, seriesData, target);
+    }
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+class WorldCatButtonReq implements Feature {
+    private _settings: CheckboxSetting = {
+        type: 'checkbox',
+        title: 'worldCatButtonReq',
+        scope: SettingGroup.Requests,
+        desc: 'Enable MAM-to-WorldCat buttons for requests',
+    };
+    private _tar: string = '#torDetMainCon';
+    private _share = new Shared();
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['request details']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+    private async _init() {
+        const reqRows = Util.rowsToObj(document.querySelectorAll('#torDetMainCon > div'));
+        const bookData: HTMLSpanElement | null = reqRows['Title:'].querySelector('span');
+        const authorData: NodeListOf<HTMLAnchorElement> | null = reqRows[
+            'Author(s):'
+        ].querySelectorAll('a');
+        const seriesData: NodeListOf<HTMLAnchorElement> | null = reqRows['Series:']
+            ? reqRows['Series:'].querySelectorAll('a')
+            : null;
+        const target: HTMLDivElement | null =
+            reqRows['Release Date'] || reqRows['Release Date:'];
+        this._share.worldCatButtons(bookData, authorData, seriesData, target);
     }
     get settings(): CheckboxSetting {
         return this._settings;
