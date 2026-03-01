@@ -296,8 +296,9 @@ This protects issue `#39`.
 - verifies `Hide Snatched` shows the hidden-count label when rows are hidden
 - verifies `Open Selected` uses canonical `/t/<id>` URLs
 - verifies bulk download and bookmark actions only act on selected rows
+- verifies the wedge/download-displayed action warns about wedge spend and uses `directDownloadFL` when available
 
-This protects issues `#118`, `#169`, `#195`, `#232`, `#250`, `#251`, and `#252`.
+This protects issues `#118`, `#169`, `#195`, `#232`, `#236`, `#250`, `#251`, and `#252`.
 
 `tests/unit/request.hiddenCounts.test.ts`
 
@@ -386,7 +387,7 @@ Current smoke scenarios:
 - freeleech page: sections collapse by default and expand on toggle
 - request page: hidden requester counts appear in the toggle label and update when hidden requesters are shown
 - request detail page: WorldCat search buttons are injected for title, author, title + author, and series
-- browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together
+- browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, browse multi-select, and wedge/download-displayed all initialize together
 - store page: unaffordable purchases are disabled while affordable ones remain enabled, and target-ratio upload credit guidance is displayed
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount
 - shoutbox page: the quick-edit controls open the newest editable shout through the site edit helper

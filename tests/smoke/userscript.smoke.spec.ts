@@ -111,6 +111,68 @@ test('request detail synthetic page adds WorldCat search buttons', async ({ page
 });
 
 test('browse synthetic page applies bookmark and filetype helpers', async ({ page }) => {
+    await page.addInitScript(() => {
+        (
+            window as Window &
+                typeof globalThis & {
+                    __mpConfirmMessages?: string[];
+                    __mpFetchedDownloads?: string[];
+                    __mpDownloadedNames?: string[];
+                }
+        ).__mpConfirmMessages = [];
+        (
+            window as Window &
+                typeof globalThis & {
+                    __mpFetchedDownloads?: string[];
+                }
+        ).__mpFetchedDownloads = [];
+        (
+            window as Window &
+                typeof globalThis & {
+                    __mpDownloadedNames?: string[];
+                }
+        ).__mpDownloadedNames = [];
+        window.confirm = ((message?: string) => {
+            (
+                window as Window &
+                    typeof globalThis & {
+                        __mpConfirmMessages?: string[];
+                    }
+            ).__mpConfirmMessages?.push(String(message || ''));
+            return true;
+        }) as typeof window.confirm;
+        window.fetch = (async (input: RequestInfo | URL) => {
+            (
+                window as Window &
+                    typeof globalThis & {
+                        __mpFetchedDownloads?: string[];
+                    }
+            ).__mpFetchedDownloads?.push(String(input));
+            return new Response(new Blob(['torrent']), {
+                headers: {
+                    'content-disposition': `attachment; filename="${
+                        String(input).includes('?fl') ? 'wedged' : 'direct'
+                    }.torrent"`,
+                },
+                status: 200,
+            });
+        }) as typeof window.fetch;
+        URL.createObjectURL = (() => 'blob:synthetic') as typeof URL.createObjectURL;
+        URL.revokeObjectURL = (() => undefined) as typeof URL.revokeObjectURL;
+        const originalClick = HTMLAnchorElement.prototype.click;
+        HTMLAnchorElement.prototype.click = function () {
+            if (this.download) {
+                (
+                    window as Window &
+                        typeof globalThis & {
+                            __mpDownloadedNames?: string[];
+                        }
+                ).__mpDownloadedNames?.push(this.download);
+                return;
+            }
+            return originalClick.call(this);
+        };
+    });
     await installGMStubs(page, {
         bookmarkIcons: true,
         buildTags: true,
@@ -118,12 +180,14 @@ test('browse synthetic page applies bookmark and filetype helpers', async ({ pag
         multiSelectBrowse: true,
         mp_version: '4.4.2',
         toggleBookmarked: true,
+        wedgeDownloadDisplayed: true,
     });
     await loadFixturePage(page, '/tor/browse.php', 'tests/fixtures/browse.html');
     await loadUserscript(page);
 
     await expect(page.locator('body')).toHaveClass(/mp_bookmarkOverride/);
     await expect(page.locator('#massActions #mp_multiSelectToolbar')).toBeVisible();
+    await expect(page.locator('#massActions #mp_wedgeDownloadDisplayed')).toBeVisible();
     await expect(page.locator('#ssr .mp_multiSelectBox')).toHaveCount(2);
     await page.locator('#massActions #mp_multiSelectAll').click();
     await expect(page.locator('#ssr .mp_multiSelectBox:checked')).toHaveCount(2);
@@ -137,6 +201,51 @@ test('browse synthetic page applies bookmark and filetype helpers', async ({ pag
     await expect(page.locator('#tdr2')).toBeVisible();
     await expect(page.locator('#tdr1 .mp_tags .mp_tag')).toHaveCount(3);
     await expect(page.locator('#tdr1 .torRowDesc')).toBeHidden();
+
+    await page.locator('#mp_bookmarkedToggle').click();
+    await page.locator('#massActions #mp_wedgeDownloadDisplayed').click();
+    await expect
+        .poll(async () =>
+            page.evaluate(
+                () =>
+                    (
+                        window as Window &
+                            typeof globalThis & {
+                                __mpConfirmMessages?: string[];
+                            }
+                    ).__mpConfirmMessages || []
+            )
+        )
+        .toContainEqual(expect.stringContaining('spend 1 freeleech wedge'));
+    await expect
+        .poll(async () =>
+            page.evaluate(
+                () =>
+                    (
+                        window as Window &
+                            typeof globalThis & {
+                                __mpFetchedDownloads?: string[];
+                            }
+                    ).__mpFetchedDownloads || []
+            )
+        )
+        .toEqual([
+            'https://www.myanonamouse.net/download/1?fl',
+            'https://www.myanonamouse.net/download/2',
+        ]);
+    await expect
+        .poll(async () =>
+            page.evaluate(
+                () =>
+                    (
+                        window as Window &
+                            typeof globalThis & {
+                                __mpDownloadedNames?: string[];
+                            }
+                    ).__mpDownloadedNames || []
+            )
+        )
+        .toEqual(['wedged.torrent', 'direct.torrent']);
 });
 
 test("store synthetic page disables purchases the user can't afford", async ({ page }) => {

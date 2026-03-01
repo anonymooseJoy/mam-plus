@@ -139,12 +139,47 @@ describe('Browse features', () => {
 
     it('adds a mass-actions multi-select toolbar and limits bulk actions to selected rows', async () => {
         const openedUrls: string[] = [];
+        const confirmMessages: string[] = [];
+        const fetchedUrls: string[] = [];
+        const downloadedNames: string[] = [];
         const { document } = await loadUserscriptInJsdom({
             beforeEval(window) {
                 window.open = ((url?: string | URL) => {
                     openedUrls.push(String(url));
                     return null;
                 }) as typeof window.open;
+                window.confirm = ((message?: string) => {
+                    confirmMessages.push(String(message || ''));
+                    return true;
+                }) as typeof window.confirm;
+                window.fetch = (async (input: RequestInfo | URL) => {
+                    const url = String(input);
+                    fetchedUrls.push(url);
+                    return {
+                        blob: async () => new Blob(['torrent']),
+                        headers: {
+                            get: (header: string) =>
+                                header.toLowerCase() === 'content-disposition'
+                                    ? `attachment; filename="${
+                                          url.includes('?fl') ? 'wedged' : 'direct'
+                                      }.torrent"`
+                                    : null,
+                        },
+                        ok: true,
+                        status: 200,
+                    } as Response;
+                }) as typeof window.fetch;
+                window.URL.createObjectURL = (() => 'blob:synthetic') as typeof window.URL.createObjectURL;
+                window.URL.revokeObjectURL = (() => undefined) as typeof window.URL.revokeObjectURL;
+
+                const originalClick = window.HTMLAnchorElement.prototype.click;
+                window.HTMLAnchorElement.prototype.click = function () {
+                    if (this.download) {
+                        downloadedNames.push(this.download);
+                        return;
+                    }
+                    return originalClick.call(this);
+                };
 
                 window.document.querySelectorAll('.directDownload').forEach((link, index) => {
                     link.addEventListener('click', (event) => {
@@ -159,11 +194,13 @@ describe('Browse features', () => {
                     event.preventDefault();
                     bookmarkLink.setAttribute('data-bookmarked', 'true');
                 });
+
             },
             gmValues: {
                 mp_version: '4.4.2',
                 multiSelectBrowse: true,
                 toggleSnatched: true,
+                wedgeDownloadDisplayed: true,
             },
             html: readFileSync('tests/fixtures/browse.html', 'utf8'),
             url: 'https://www.myanonamouse.net/tor/browse.php',
@@ -200,5 +237,25 @@ describe('Browse features', () => {
         expect(
             (document.querySelector('#torBookmark2') as HTMLElement).getAttribute('data-bookmarked')
         ).toBe('true');
+
+        snatchedToggle!.click();
+        expect(snatchedToggle!.textContent).toBe('Hide Snatched');
+
+        await waitFor(50);
+        (document.querySelector('#mp_multiSelectNone') as HTMLElement).click();
+        const wedgeDownloadButton = document.querySelector(
+            '#mp_wedgeDownloadDisplayed'
+        ) as HTMLElement | null;
+        expect(wedgeDownloadButton).not.toBeNull();
+        wedgeDownloadButton!.click();
+
+        expect(confirmMessages.at(-1)).toContain('spend 1 freeleech wedge');
+        expect(confirmMessages.at(-1)).toContain('download 2 displayed torrents');
+        await waitFor(25);
+        expect(fetchedUrls).toEqual([
+            'https://www.myanonamouse.net/download/1?fl',
+            'https://www.myanonamouse.net/download/2',
+        ]);
+        expect(downloadedNames).toEqual(['wedged.torrent', 'direct.torrent']);
     });
 });
