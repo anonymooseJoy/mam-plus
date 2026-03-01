@@ -133,7 +133,7 @@ test('shoutbox synthetic page retries gift with a lower amount', async ({ page }
     await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
     await loadUserscript(page);
 
-    await page.locator('.sb_menu').click();
+    await page.locator('#sbid100 .sb_menu').click();
     await expect(page.locator('#giftButton button')).toBeVisible();
     await page.locator('#giftButton button').click();
 
@@ -148,10 +148,11 @@ test('shoutbox synthetic page previews a message through the site preview endpoi
 }) => {
     await page.route('https://www.myanonamouse.net/jsonPostTest.php', async (route) => {
         const body = route.request().postData() || '';
+        const message = decodeURIComponent((body.split('=')[1] || '').replace(/\+/g, ' '));
 
         await route.fulfill({
             body: JSON.stringify({
-                message: `<strong>Rendered:</strong> ${decodeURIComponent(body.split('=')[1] || '')}`,
+                message: `<strong>Rendered:</strong> ${message}`,
             }),
             contentType: 'application/json; charset=utf-8',
         });
@@ -196,6 +197,27 @@ test('shoutbox synthetic page shows the quick-edit hint and loads the newest edi
 
     expect(editedId).toBe('250');
     await expect(page.locator('#sbEditOverlay')).not.toHaveClass(/hideMe/);
+});
+
+test('shoutbox synthetic page highlights recent posts from the hovered user', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        hoverShoutUserPosts: true,
+        mp_version: '4.4.2',
+    });
+    await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
+    await loadUserscript(page);
+
+    await page.locator('#sbid200 a[href="/u/999"]').hover();
+    await expect(page.locator('#sbid200 .shoutRow')).toHaveClass(/mp_hoverShoutUser/);
+    await expect(page.locator('#sbid250 .shoutRow')).toHaveClass(/mp_hoverShoutUser/);
+    await expect(page.locator('#sbid100 .shoutRow')).not.toHaveClass(/mp_hoverShoutUser/);
+
+    await page.locator('#sbid100 a[href="/u/123"]').hover();
+    await expect(page.locator('#sbid200 .shoutRow')).not.toHaveClass(/mp_hoverShoutUser/);
+    await expect(page.locator('#sbid250 .shoutRow')).not.toHaveClass(/mp_hoverShoutUser/);
+    await expect(page.locator('#sbid100 .shoutRow')).toHaveClass(/mp_hoverShoutUser/);
 });
 
 test('shoutbox synthetic page can open and save shoutbox settings in place', async ({
@@ -285,7 +307,7 @@ test('quick shout stays visible when the shoutbox enters fullscreen', async ({ p
         shoutbox.style.inset = '0px';
     });
 
-    await expect(page.locator('#sbNotifs > #mp_quickShoutRoot')).toBeVisible();
+    await expect(page.locator('#sbNotifs #mp_comboBoxInput')).toBeVisible();
 
     await page.evaluate(() => {
         const shoutbox = document.getElementById('shoutbox') as HTMLElement;

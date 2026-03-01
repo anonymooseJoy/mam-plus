@@ -225,6 +225,13 @@ This protects issue `#179`.
 
 This protects issue `#131`.
 
+`tests/unit/shout.hoverUserPosts.test.ts`
+
+- verifies hovering a shoutbox user temporarily highlights all currently visible shouts from that user
+- verifies moving to another user's link clears the old temporary highlights and applies the new ones
+
+This protects issue `#25`.
+
 `tests/unit/shout.settingsPanel.test.ts`
 
 - verifies the shoutbox settings toggle renders only shoutbox settings inline
@@ -308,6 +315,7 @@ Current smoke scenarios:
 - store page: unaffordable purchases are disabled while affordable ones remain enabled, and target-ratio upload credit guidance is displayed
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount
 - shoutbox page: the quick-edit controls open the newest editable shout through the site edit helper
+- shoutbox page: hovering a user link highlights that user's recent visible posts and clears the highlight when moving to another user
 - shoutbox page: the preview button renders the current shout through the site preview endpoint
 - shoutbox fullscreen: QuickShout moves into the fullscreen overlay and back out when fullscreen is toggled
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`

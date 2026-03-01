@@ -234,6 +234,199 @@ class MutedUsers implements Feature {
 }
 
 /**
+ * Temporarily highlights recent shoutbox posts from the hovered user.
+ */
+class HoverShoutUserPosts implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Shoutbox,
+        type: 'checkbox',
+        title: 'hoverShoutUserPosts',
+        desc: `Temporarily highlight recent shoutbox posts from the hovered user`,
+    };
+    private _tar: string = '#sbf';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['shoutbox', 'home']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _init() {
+        console.log(`[M+] Adding shout hover user highlighting...`);
+
+        const shoutboxBody = document.getElementById('sbf');
+        if (!shoutboxBody) {
+            return;
+        }
+
+        let activeUserHref = '';
+
+        const applyHighlight = (elem: HTMLElement) => {
+            if (!elem.dataset.mpHoverOutline) {
+                elem.dataset.mpHoverOutline = elem.style.outline || '';
+                elem.dataset.mpHoverOutlineOffset = elem.style.outlineOffset || '';
+                elem.dataset.mpHoverBoxShadow = elem.style.boxShadow || '';
+                elem.dataset.mpHoverBg = elem.style.backgroundColor || '';
+            }
+
+            elem.classList.add('mp_hoverShoutUser');
+            elem.style.setProperty('outline', '3px solid rgba(255, 196, 0, 0.98)', 'important');
+            elem.style.setProperty('outline-offset', '-1px', 'important');
+            elem.style.setProperty(
+                'box-shadow',
+                'inset 6px 0 0 rgba(255, 196, 0, 0.98), inset 0 0 0 9999px rgba(255, 214, 92, 0.14)',
+                'important'
+            );
+            elem.style.setProperty('background-color', 'rgba(255, 214, 92, 0.14)', 'important');
+        };
+
+        const removeHighlight = (elem: HTMLElement) => {
+            elem.classList.remove('mp_hoverShoutUser');
+
+            if (elem.dataset.mpHoverOutline !== undefined) {
+                if (elem.dataset.mpHoverOutline) {
+                    elem.style.setProperty('outline', elem.dataset.mpHoverOutline);
+                } else {
+                    elem.style.removeProperty('outline');
+                }
+                delete elem.dataset.mpHoverOutline;
+            }
+
+            if (elem.dataset.mpHoverOutlineOffset !== undefined) {
+                if (elem.dataset.mpHoverOutlineOffset) {
+                    elem.style.setProperty(
+                        'outline-offset',
+                        elem.dataset.mpHoverOutlineOffset
+                    );
+                } else {
+                    elem.style.removeProperty('outline-offset');
+                }
+                delete elem.dataset.mpHoverOutlineOffset;
+            }
+
+            if (elem.dataset.mpHoverBoxShadow !== undefined) {
+                if (elem.dataset.mpHoverBoxShadow) {
+                    elem.style.setProperty('box-shadow', elem.dataset.mpHoverBoxShadow);
+                } else {
+                    elem.style.removeProperty('box-shadow');
+                }
+                delete elem.dataset.mpHoverBoxShadow;
+            }
+
+            if (elem.dataset.mpHoverBg !== undefined) {
+                if (elem.dataset.mpHoverBg) {
+                    elem.style.setProperty('background-color', elem.dataset.mpHoverBg);
+                } else {
+                    elem.style.removeProperty('background-color');
+                }
+                delete elem.dataset.mpHoverBg;
+            }
+        };
+
+        const clearHighlights = () => {
+            document
+                .querySelectorAll('.mp_hoverShoutUser')
+                .forEach((elem) => removeHighlight(elem as HTMLElement));
+        };
+
+        const getShoutRowElement = (elem: Element | null) => {
+            if (!elem) {
+                return null;
+            }
+
+            const directShoutRow = elem.closest('.shoutRow');
+            if (directShoutRow) {
+                return directShoutRow as HTMLElement;
+            }
+
+            const shoutWrapper = elem.closest('div[id^="sbid"]') as HTMLElement | null;
+            if (!shoutWrapper) {
+                return null;
+            }
+
+            return (
+                (shoutWrapper.querySelector('.shoutRow') as HTMLElement | null) || shoutWrapper
+            );
+        };
+
+        const getAuthorLink = (row: Element | null) => {
+            if (!row) {
+                return null;
+            }
+
+            return row.querySelector('a[href^="/u/"]') as HTMLAnchorElement | null;
+        };
+
+        const highlightUser = (userHref: string) => {
+            clearHighlights();
+            if (!userHref) {
+                activeUserHref = '';
+                return;
+            }
+
+            document.querySelectorAll('.sbf div[id^="sbid"]').forEach((row) => {
+                const shoutRow = getShoutRowElement(row);
+                const authorHref = getAuthorLink(shoutRow || row)?.getAttribute('href') || '';
+
+                if (authorHref === userHref) {
+                    applyHighlight(shoutRow || (row as HTMLElement));
+                }
+            });
+            activeUserHref = userHref;
+        };
+
+        const getUserLink = (target: EventTarget | null) => {
+            if (!(target instanceof HTMLElement)) {
+                return null;
+            }
+
+            return target.closest('a[href^="/u/"]') as HTMLAnchorElement | null;
+        };
+
+        shoutboxBody.addEventListener('mouseover', (event) => {
+            const userLink = getUserLink(event.target);
+            const userHref =
+                getAuthorLink(getShoutRowElement(userLink))?.getAttribute('href') ||
+                userLink?.getAttribute('href') ||
+                '';
+
+            if (!userHref || userHref === activeUserHref) {
+                return;
+            }
+
+            highlightUser(userHref);
+        });
+
+        shoutboxBody.addEventListener('mouseout', (event) => {
+            if (!activeUserHref) {
+                return;
+            }
+
+            const nextLink = getUserLink((event as MouseEvent).relatedTarget);
+            const nextHref = nextLink?.getAttribute('href') || '';
+
+            if (nextHref === activeUserHref) {
+                return;
+            }
+
+            clearHighlights();
+            activeUserHref = '';
+        });
+
+        shoutboxBody.addEventListener('mouseleave', () => {
+            clearHighlights();
+            activeUserHref = '';
+        });
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
  * Allows Gift button to be added to Shout Triple dot menu
  */
 class GiftButton implements Feature {
