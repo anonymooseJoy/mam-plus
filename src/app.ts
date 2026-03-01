@@ -70,8 +70,7 @@ namespace MP {
          * * SETTINGS
          */
         Check.page('settings').then((result) => {
-            const subPg: string = window.location.search;
-            if (result === true && (subPg === '' || subPg === '?view=general')) {
+            if (result === true) {
                 // Initialize the settings page
                 Settings.init(result, settingsGlob);
             }

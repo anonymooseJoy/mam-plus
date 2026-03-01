@@ -50,6 +50,63 @@ class Settings {
         };
     }
 
+    private static _getPreferencesView(): string {
+        return new URLSearchParams(window.location.search).get('view') || 'general';
+    }
+
+    private static _buildPreferencesTab(active: boolean): HTMLTableCellElement {
+        const cell = document.createElement('td');
+        const link = document.createElement('a');
+
+        cell.className = `${active ? 'row1' : 'row2'} cen torSearchNavBox`;
+        cell.style.display = 'inline-block';
+        cell.style.height = '3em';
+        cell.style.alignContent = 'center';
+
+        link.href = '/preferences/index.php?view=mamplus';
+        link.textContent = 'MAM+';
+        cell.appendChild(link);
+
+        return cell;
+    }
+
+    private static _injectPreferencesTab(settingNav: HTMLTableElement, active: boolean) {
+        const navRow = settingNav.querySelector('tr');
+        if (!navRow) {
+            return;
+        }
+
+        const existingTab = navRow.querySelector(
+            'a[href*="/preferences/index.php?view=mamplus"]'
+        ) as HTMLAnchorElement | null;
+        if (existingTab) {
+            return;
+        }
+
+        if (active) {
+            navRow
+                .querySelectorAll('td.torSearchNavBox a[href*="/preferences/index.php?view="]')
+                .forEach((link) => {
+                    const cell = link.closest('td');
+                    if (cell) {
+                        cell.classList.remove('row1');
+                        cell.classList.add('row2');
+                    }
+                });
+        }
+
+        const mamPlusTab = this._buildPreferencesTab(active);
+        const logoutCell = navRow.querySelector(
+            'td.torSearchNavBox a[href*="/logout.php"]'
+        )?.closest('td');
+
+        if (logoutCell) {
+            navRow.insertBefore(mamPlusTab, logoutCell);
+        } else {
+            navRow.appendChild(mamPlusTab);
+        }
+    }
+
     // Function for gathering the needed scopes
     private static _getScopes(
         settings: AnyFeature[],
@@ -354,10 +411,31 @@ class Settings {
 
             await Check.elemLoad('#mainBody > table').then(() => {
                 if (MP.DEBUG) console.log(`[M+] Starting to build Settings table...`);
-                const settingNav: Element = document.querySelector('#mainBody > table')!;
+                const settingNav = document.querySelector(
+                    '#mainBody > table'
+                ) as HTMLTableElement | null;
+                if (!settingNav) {
+                    return;
+                }
+                const isMamPlusView = this._getPreferencesView() === 'mamplus';
                 const settingRoot: HTMLDivElement = document.createElement('div');
 
+                this._injectPreferencesTab(settingNav, isMamPlusView);
+
+                if (!isMamPlusView) {
+                    console.log('[M+] Added the MAM+ Preferences tab!');
+                    if (MP.DEBUG) {
+                        console.groupEnd();
+                    }
+                    return;
+                }
+
                 settingNav.insertAdjacentElement('afterend', settingRoot);
+                let sibling = settingRoot.nextElementSibling as HTMLElement | null;
+                while (sibling) {
+                    sibling.style.display = 'none';
+                    sibling = sibling.nextElementSibling as HTMLElement | null;
+                }
 
                 this.renderInto(settingRoot, settings, {
                     includeCopyPaste: true,
@@ -367,7 +445,7 @@ class Settings {
                     saveText: 'Save M+ Settings',
                     titleText: 'MAM+ Settings',
                 }).then(() => {
-                    console.log('[M+] Added the MAM+ Settings table!');
+                    console.log('[M+] Added the MAM+ Settings tab!');
                     if (MP.DEBUG) {
                         console.groupEnd();
                     }
