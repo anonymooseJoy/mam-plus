@@ -350,6 +350,14 @@ This protects issue `#165`.
 
 This protects issue `#255`.
 
+`tests/unit/tor.moveBookmarkButton.test.ts`
+
+- verifies the torrent bookmark proxy appears next to the title
+- verifies the native bookmark control is hidden in its original location
+- verifies the proxy updates when the site replaces the native bookmark element
+
+This protects issue `#43`.
+
 `tests/unit/tor.externalButtons.test.ts`
 
 - verifies Goodreads, Audible, and StoryGraph buttons still render when torrent categories are shown as text instead of icon markup
@@ -399,6 +407,7 @@ Current smoke scenarios:
 - forum page: OP and staff posts are marked in forum threads
 - forum page: shoutbox emphasize and mute user lists also apply to forum threads
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
+- torrent page: the moved bookmark proxy appears next to the title and stays in sync with the native bookmark control
 - torrent page: Goodreads, Audible, and StoryGraph buttons still appear when categories are text-only
 - vault page: stale donation history is replaced even without a donate form
 

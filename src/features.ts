@@ -55,6 +55,7 @@ class InitFeatures {
         new GoodreadsButton();
         new StoryGraphButton();
         new AudibleButton();
+        new MoveBookmarkButton();
         new CurrentlyReading();
         new TorGiftDefault();
         new RatioProtect();

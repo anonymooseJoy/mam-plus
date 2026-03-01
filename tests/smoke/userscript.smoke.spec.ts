@@ -539,6 +539,39 @@ test('torrent synthetic page keeps Currently Reading as a plain textarea', async
     await expect(page.locator('.mp_crRow textarea')).toHaveValue(/Synthetic Book/);
 });
 
+test('torrent synthetic page mirrors the bookmark button next to the title', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        moveBookmarkButton: true,
+        mp_version: '4.4.2',
+    });
+    await loadFixturePage(page, '/t/123', 'tests/fixtures/torrent.html');
+    await loadUserscript(page);
+
+    await page.evaluate(() => {
+        const source = document.querySelector('#torBookmark123') as HTMLAnchorElement;
+        source.addEventListener('click', (event) => {
+            event.preventDefault();
+
+            const replacement = document.createElement('a');
+            replacement.id = 'torDeBookmark123';
+            replacement.title = 'Remove bookmark';
+            replacement.setAttribute('role', 'button');
+            replacement.textContent = 'Remove bookmark';
+            source.replaceWith(replacement);
+        });
+    });
+
+    await expect(page.locator('#mp_torBookmarkProxy')).toBeVisible();
+    await expect(page.locator('#torBookmark123')).toBeHidden();
+
+    await page.locator('#mp_torBookmarkProxy').click();
+
+    await expect(page.locator('#mp_torBookmarkProxy')).toContainText('Remove bookmark');
+    await expect(page.locator('#torDeBookmark123')).toBeHidden();
+});
+
 test('torrent synthetic page still shows external book-search buttons with text-only categories', async ({
     page,
 }) => {

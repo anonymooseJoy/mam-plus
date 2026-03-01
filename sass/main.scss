@@ -357,6 +357,33 @@ a[class^='mp_mark_'] {
         background: #cac4a8;
     }
 }
+.mp_torBookmarkProxy {
+    margin-left: 8px;
+    margin-bottom: 0;
+    vertical-align: middle;
+    padding-left: 22px;
+    background-repeat: no-repeat;
+    background-position: 4px center;
+    background-size: 12px 12px;
+}
+.mp_torBookmarkProxy[data-bookmark-state='add'] {
+    .mp_dark & {
+        background-image: url($bookmark-for-dark);
+    }
+
+    .mp_light & {
+        background-image: url($bookmark-for-lite);
+    }
+}
+.mp_torBookmarkProxy[data-bookmark-state='remove'] {
+    .mp_dark & {
+        background-image: url($demark-for-dark);
+    }
+
+    .mp_light & {
+        background-image: url($demark-for-lite);
+    }
+}
 .mp_forumPostMarkers {
     display: flex;
     flex-wrap: wrap;
