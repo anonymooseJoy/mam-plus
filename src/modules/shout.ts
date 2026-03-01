@@ -427,6 +427,110 @@ class HoverShoutUserPosts implements Feature {
 }
 
 /**
+ * Displays user IDs inline next to shoutbox usernames.
+ */
+class ShowShoutUID implements Feature {
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Shoutbox,
+        type: 'checkbox',
+        title: 'showShoutUID',
+        desc: `Display user IDs inline in the shoutbox`,
+    };
+    private _tar: string = '#sbf';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['shoutbox', 'home']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _init() {
+        console.log(`[M+] Displaying shoutbox user IDs...`);
+
+        const shoutboxBody = document.getElementById('sbf');
+        if (!shoutboxBody) {
+            return;
+        }
+
+        const getUserID = (shoutRow: HTMLElement, authorLink: HTMLAnchorElement | null) => {
+            const directID = shoutRow.getAttribute('data-uid');
+            if (directID) {
+                return directID;
+            }
+
+            const shoutWrapper = shoutRow.closest('div[id^="sbid"]');
+            const wrapperID = shoutWrapper?.getAttribute('data-uid');
+            if (wrapperID) {
+                return wrapperID;
+            }
+
+            const href = authorLink?.getAttribute('href') || '';
+            const match = href.match(/^\/u\/(\d+)$/);
+            return match ? match[1] : '';
+        };
+
+        const applyUID = (node: Element) => {
+            const shoutWrapper = (node.matches('div[id^="sbid"]')
+                ? node
+                : node.closest('div[id^="sbid"]')) as HTMLElement | null;
+            if (!shoutWrapper) {
+                return;
+            }
+
+            const authorLink = shoutWrapper.querySelector(
+                'a[href^="/u/"]:not(.sbNewQuote):not(.sbAt)'
+            ) as HTMLAnchorElement | null;
+            if (!authorLink || authorLink.nextElementSibling?.classList.contains('mp_shoutUid')) {
+                return;
+            }
+
+            const userID = getUserID(shoutWrapper, authorLink);
+            if (!userID) {
+                return;
+            }
+
+            const uidElem = document.createElement('span');
+            uidElem.className = 'mp_shoutUid';
+            uidElem.textContent = ` [${userID}]`;
+            uidElem.title = `UID: ${userID}`;
+            authorLink.insertAdjacentElement('afterend', uidElem);
+        };
+
+        shoutboxBody.querySelectorAll('div[id^="sbid"]').forEach((row) => {
+            applyUID(row);
+        });
+
+        new MutationObserver((mutationList) => {
+            mutationList.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    const nodeElem = Util.nodeToElem(node);
+                    if (!nodeElem) {
+                        return;
+                    }
+
+                    if (nodeElem.matches('div[id^="sbid"]')) {
+                        applyUID(nodeElem);
+                    } else {
+                        nodeElem.querySelectorAll('div[id^="sbid"]').forEach((row) => {
+                            applyUID(row);
+                        });
+                    }
+                });
+            });
+        }).observe(shoutboxBody, {
+            childList: true,
+            subtree: true,
+        });
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
  * Allows Gift button to be added to Shout Triple dot menu
  */
 class GiftButton implements Feature {

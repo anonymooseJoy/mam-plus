@@ -67,6 +67,7 @@ class InitFeatures {
         new PriorityStyle();
         new MutedUsers();
         new HoverShoutUserPosts();
+        new ShowShoutUID();
         new GiftButton();
         new ShoutMenuUserActions();
         new QuickEditShout();
