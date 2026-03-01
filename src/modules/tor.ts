@@ -363,8 +363,13 @@ class RatioProtect implements Feature {
                     } | Dif ${rDiff}`
                 );
 
-            // Only activate if a ratio change is expected
-            if (!isNaN(rDiff) && rDiff > 0.009) {
+            const newRatio = Util.extractFloat(rNew)[0];
+            const minRatio = parseFloat(GM_getValue('ratioProtectMin_val'));
+            const hitsMinimumProtection =
+                (!isNaN(minRatio) && newRatio < minRatio) || newRatio < 2;
+
+            // Activate on meaningful ratio loss or when minimum protection would be violated.
+            if (!isNaN(rDiff) && (rDiff > 0.009 || hitsMinimumProtection)) {
                 if (dlLabel) {
                     dlLabel.innerHTML = `Ratio loss ${rDiff.toFixed(2)}`;
                     dlLabel.style.fontWeight = 'normal'; //To distinguish from BOLD Titles
@@ -404,7 +409,7 @@ class RatioProtect implements Feature {
                 }
 
                 // Style the download button based on Ratio Protect level settings
-                if (dlBtn && dlLabel) {
+                if (dlBtn) {
                     // * This is the "trivial ratio loss" threshold
                     // These changes will always happen if the ratio conditions are met
                     if (rDiff > r1) {
@@ -416,16 +421,13 @@ class RatioProtect implements Feature {
                     // This also prevents going below 2 ratio (PU requirement)
                     // TODO: Replace disable button with buy FL button
 
-                    if (
-                        rDiff > r3 ||
-                        Util.extractFloat(rNew)[0] < GM_getValue('ratioProtectMin_val') ||
-                        Util.extractFloat(rNew)[0] < 2
-                    ) {
-                        this._setButtonState(dlBtn, '3_alert');
+                    if (rDiff > r3 || hitsMinimumProtection) {
+                        this._setButtonState(dlBtn, '3_alert', dlLabel);
                         // * This is the "I need to think about using a FL" threshold
                     } else if (rDiff > r2) {
                         this._setButtonState(dlBtn, '2_warn');
                     }
+
                 }
             }
             // If the user does not have a ratio, display a short message
@@ -454,9 +456,16 @@ class RatioProtect implements Feature {
                 console.warn(`No label provided in _setButtonState()!`);
             }
             tar.style.backgroundColor = 'Red';
+            tar.style.setProperty('background-color', 'Red', 'important');
+            tar.style.setProperty('background-image', 'none', 'important');
+            tar.style.setProperty('color', 'White', 'important');
+            tar.style.setProperty('border-color', 'DarkRed', 'important');
             tar.style.cursor = 'no-drop';
+            tar.style.setProperty('cursor', 'no-drop', 'important');
             tar.innerHTML = 'FL Needed';
-            label.style.fontWeight = 'bold';
+            if (label) {
+                label.style.fontWeight = 'bold';
+            }
         } else {
             throw new Error(`State "${state}" does not exist.`);
         }
@@ -686,10 +695,13 @@ class RatioProtectIcons implements Feature {
         // Test if there will be ratio loss
         if (rNew && rCur && !seeding) {
             // Change icon based on Ratio Protect states
+            const minRatio = parseFloat(GM_getValue('ratioProtectMin_val'));
+            const newRatio = Util.extractFloat(rNew)[0];
+
             if (
                 rDiff > r3 ||
-                Util.extractFloat(rNew)[0] < GM_getValue('ratioProtectMin_val') ||
-                Util.extractFloat(rNew)[0] < 2
+                (!isNaN(minRatio) && newRatio < minRatio) ||
+                newRatio < 2
             ) {
                 this._buildIconLinks(siteFavicons, '12');
             } else if (rDiff > r2) {
