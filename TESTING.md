@@ -265,6 +265,13 @@ This protects issue `#15`.
 
 This protects issue `#16`.
 
+`tests/unit/forum.markRead.test.ts`
+
+- verifies forum overview rows get per-forum `Mark Read` buttons
+- verifies each button derives its target directly from the forum board link and appends `&markRead=true`
+
+This protects issue `#114`.
+
 `tests/unit/forum.userFilters.test.ts`
 
 - verifies users from the existing emphasize list get forum post emphasis styling

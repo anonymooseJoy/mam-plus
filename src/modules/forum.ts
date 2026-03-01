@@ -71,6 +71,61 @@ class ForumPostMarkers implements Feature {
     }
 }
 
+class ForumMarkRead implements Feature {
+    private _settings: CheckboxSetting = {
+        type: 'checkbox',
+        scope: SettingGroup.Forum,
+        title: 'forumMarkRead',
+        desc: `Add a Mark this Forum Read button to forum threads.`,
+    };
+    private _tar: string = '#mainForum a.forumLink[href*="/f/b/"]';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init() {
+        console.log('[M+] Adding forum overview mark-read buttons...');
+        if (window.location.pathname !== '/f') {
+            return;
+        }
+
+        document.querySelectorAll('#mainForum td.row1').forEach((cell) => {
+            const forumLink = cell.querySelector(
+                ':scope > a.forumLink[href*="/f/b/"]'
+            ) as HTMLAnchorElement | null;
+            if (!forumLink) {
+                return;
+            }
+
+            const href = forumLink.href.includes('markRead=true')
+                ? forumLink.href
+                : `${forumLink.href}&markRead=true`;
+            const boardID = href.match(/\/f\/b\/(\d+)/)?.[1];
+            if (!boardID || cell.querySelector(`#mp_forumMarkRead_${boardID}`)) {
+                return;
+            }
+
+            const markReadButton = document.createElement('a');
+            markReadButton.id = `mp_forumMarkRead_${boardID}`;
+            markReadButton.className = 'torFormButton forumButtonLink mp_forumMarkReadBtn';
+            markReadButton.href = href;
+            markReadButton.textContent = 'Mark Read';
+
+            forumLink.insertAdjacentText('afterend', ' ');
+            forumLink.insertAdjacentElement('afterend', markReadButton);
+        });
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
 class ForumUserFilters implements Feature {
     private _settings: CheckboxSetting = {
         type: 'checkbox',
