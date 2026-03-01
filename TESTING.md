@@ -250,6 +250,14 @@ This protects issue `#14`.
 
 This protects issue `#15`.
 
+`tests/unit/forum.postMarkers.test.ts`
+
+- verifies the first thread author is marked as `OP`
+- verifies later replies from the same author are also marked as `OP`
+- verifies forum posts whose avatar box identifies the user as staff get a `Staff` marker
+
+This protects issue `#16`.
+
 `tests/unit/browse.features.test.ts`
 
 - verifies bookmark icon override adds the `mp_bookmarkOverride` body class when enabled
@@ -321,6 +329,7 @@ Current smoke scenarios:
 - shoutbox page: the preview button renders the current shout through the site preview endpoint
 - shoutbox fullscreen: preview and settings controls are intentionally hidden
 - shoutbox fullscreen: QuickShout moves into the fullscreen overlay and back out when fullscreen is toggled
+- forum page: OP and staff posts are marked in forum threads
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
 - vault page: stale donation history is replaced even without a donate form
 

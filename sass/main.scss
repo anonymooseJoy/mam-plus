@@ -348,6 +348,33 @@ a[class^='mp_mark_'] {
         background: #cac4a8;
     }
 }
+.mp_forumPostMarkers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin: 6px 0 8px;
+}
+.mp_forumPostMarker {
+    display: inline-block;
+    min-width: 52px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+.mp_forumPostMarker_op {
+    background: linear-gradient(180deg, #1794bb 0%, #0d6b85 100%);
+    color: #fff;
+}
+.mp_forumPostMarker_staff {
+    background: linear-gradient(180deg, #b42c59 0%, #7c1636 100%);
+    color: #fff;
+}
 #mp_giftStatusElem {
     font-family: monospace;
     color: white;

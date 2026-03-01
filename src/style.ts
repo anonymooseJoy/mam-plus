@@ -22,8 +22,8 @@ class Style {
             this._theme = this._prevTheme;
         } else if (MP.DEBUG) console.warn('no previous theme');
 
-        // Fetch the CSS data
-        this._cssData = GM_getResourceText('MP_CSS');
+        // Dev builds inline CSS so local Sass changes are testable without a machine-specific file URL.
+        this._cssData = ##meta_cssdata## || GM_getResourceText('MP_CSS');
     }
 
     /** Allows the current theme to be returned */

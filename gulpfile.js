@@ -50,6 +50,15 @@ const basePathEnv = () => {
     return pathObj;
 };
 
+/** Returns the CSS payload to inline into dev builds */
+const inlineCssPayload = () => {
+    if (env === 'release') {
+        return 'undefined';
+    }
+
+    return JSON.stringify(Fs.readFileSync('build/main.css', 'utf8'));
+};
+
 /** Returns the current timestamp */
 const buildTime = () => {
     const mString = [
@@ -114,6 +123,7 @@ const procTS_dev = () => {
         Srcmap.init(),
         // Inject information
         Inject.replace('##meta_timestamp##', timestamp),
+        Inject.replace('##meta_cssdata##', inlineCssPayload()),
         // Compile typescript
         Ts(tsSettings),
         // Write sourcemap
@@ -131,6 +141,7 @@ const procTS_release = () => {
     return pump(
         Gulp.src(globs.app),
         Inject.replace('##meta_timestamp##', timestamp),
+        Inject.replace('##meta_cssdata##', inlineCssPayload()),
         Ts(tsSettings),
         Gulp.dest(loc.dest),
         (err) => errorCB(err)
@@ -166,12 +177,12 @@ const sass_release = () => {
 };
 
 /** NPM build task. Use for one-off development */
-exports.build = series(parallel(sass_dev, procTS_dev), insertHead);
+exports.build = series(sass_dev, procTS_dev, insertHead);
 
 /** NPM watch task. Use for continual development */
 exports.watch = () => {
     Gulp.watch([globs.app, globs.meta], series(procTS_dev, insertHead));
-    Gulp.watch(globs.style, series(sass_dev));
+    Gulp.watch(globs.style, series(sass_dev, procTS_dev, insertHead));
 };
 
 /** NPM release task. Use for publishing the compiled script */
