@@ -39,6 +39,7 @@ class InitFeatures {
         new FiletypeSearchFilter();
         new BuildTags();
         new MultiSelectBrowse();
+        new WedgeDownloadDisplayed();
         new RandomBook();
 
         // Initialize Freeleech Page functions

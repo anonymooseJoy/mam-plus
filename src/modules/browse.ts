@@ -1230,6 +1230,280 @@ class MultiSelectBrowse implements Feature {
 }
 
 /**
+ * Adds a browse mass-action button to wedge and download all displayed torrents
+ */
+class WedgeDownloadDisplayed implements Feature {
+    private _batchSize: number = 10;
+    private _batchPauseMs: number = 10000;
+    private _settings: CheckboxSetting = {
+        scope: SettingGroup.Search,
+        type: 'checkbox',
+        title: 'wedgeDownloadDisplayed',
+        desc: `Add a mass-action button to wedge and download all displayed torrents`,
+    };
+    private _tar: string = '#ssr';
+    private _buttonID: string = 'mp_wedgeDownloadDisplayed';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['browse']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private _init(): void {
+        this._ensureButton();
+
+        Check.elemObserver('#ssr', () => {
+            this._ensureButton();
+        });
+        Check.elemObserver(
+            'body',
+            () => {
+                this._ensureButton();
+            },
+            {
+                childList: true,
+                subtree: true,
+            }
+        );
+
+        console.log('[M+] Added the wedge/download displayed torrents button!');
+    }
+
+    private _ensureButton(): void {
+        const existingButton: HTMLElement | null = document.getElementById(this._buttonID);
+        const massActions: HTMLElement | null = this._findMassActionsAnchor();
+        if (massActions === null) {
+            return;
+        }
+
+        if (existingButton !== null) {
+            if (existingButton.parentElement !== massActions) {
+                massActions.appendChild(existingButton);
+            }
+            return;
+        }
+
+        const button = document.createElement('button');
+        button.id = this._buttonID;
+        button.type = 'button';
+        button.textContent = 'Wedge & Download Displayed';
+        button.className = 'mp_plainBtn';
+        button.addEventListener('click', async () => {
+            const originalText = button.textContent || 'Wedge & Download Displayed';
+            button.disabled = true;
+            button.textContent = 'Processing...';
+            try {
+                await this._wedgeDownloadDisplayed(button);
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        });
+        massActions.appendChild(button);
+    }
+
+    private _displayedResults(): HTMLTableRowElement[] {
+        return Array.from(document.querySelectorAll('#ssr tr[id^="tdr"]')).filter((row) => {
+            const computedStyle = window.getComputedStyle(row);
+            return computedStyle.display !== 'none' && computedStyle.visibility !== 'hidden';
+        }) as HTMLTableRowElement[];
+    }
+
+    private async _wedgeDownloadDisplayed(button: HTMLButtonElement): Promise<void> {
+        const displayedRows = this._displayedResults();
+        const downloadRows = displayedRows.filter(
+            (row) => row.querySelector('.directDownload, .directDownloadFL') !== null
+        );
+
+        if (downloadRows.length === 0) {
+            window.alert('No displayed torrents were found to download.');
+            return;
+        }
+
+        const wedgeRows = downloadRows.filter(
+            (row) => row.querySelector('.directDownloadFL') !== null
+        );
+
+        const confirmMessage =
+            wedgeRows.length > 0
+                ? `This will spend ${wedgeRows.length} freeleech wedge${
+                      wedgeRows.length === 1 ? '' : 's'
+                  } and download ${downloadRows.length} displayed torrent${
+                      downloadRows.length === 1 ? '' : 's'
+                  }. It will run in batches of ${this._batchSize} with a ${
+                      this._batchPauseMs / 1000
+                  }-second pause between batches. Continue?`
+                : `This will download ${downloadRows.length} displayed torrent${
+                      downloadRows.length === 1 ? '' : 's'
+                  }. It will run in batches of ${this._batchSize} with a ${
+                      this._batchPauseMs / 1000
+                  }-second pause between batches. Continue?`;
+
+        if (window.confirm(confirmMessage) === false) {
+            return;
+        }
+
+        let successCount = 0;
+        const failedRows: string[] = [];
+        const totalBatches = Math.ceil(downloadRows.length / this._batchSize);
+
+        for (let batchIndex = 0; batchIndex < totalBatches; batchIndex += 1) {
+            const batch = downloadRows.slice(
+                batchIndex * this._batchSize,
+                (batchIndex + 1) * this._batchSize
+            );
+
+            for (const row of batch) {
+                const wedgeLink = row.querySelector('.directDownloadFL') as HTMLAnchorElement | null;
+                const downloadLink = row.querySelector('.directDownload') as HTMLAnchorElement | null;
+                const link = wedgeLink || downloadLink;
+                if (link !== null) {
+                    try {
+                        await this._downloadTorrent(link.href, row);
+                        successCount += 1;
+                    } catch (error) {
+                        failedRows.push(this._rowLabel(row));
+                        console.error('[M+] Failed to download row:', row.id, error);
+                    }
+                    await this._wait(250);
+                }
+            }
+
+            if (batchIndex < totalBatches - 1) {
+                const continueBatch = window.confirm(
+                    `Processed batch ${batchIndex + 1} of ${totalBatches}. Continue with the next batch after a ${
+                        this._batchPauseMs / 1000
+                    }-second pause?`
+                );
+                if (continueBatch === false) {
+                    break;
+                }
+                await this._countdownPause(button, this._batchPauseMs);
+            }
+        }
+
+        if (failedRows.length > 0) {
+            window.alert(
+                `Processed ${successCount} torrent${
+                    successCount === 1 ? '' : 's'
+                }, but ${failedRows.length} failed: ${failedRows.join(', ')}`
+            );
+        }
+    }
+
+    private async _downloadTorrent(
+        url: string,
+        row: HTMLTableRowElement
+    ): Promise<void> {
+        const response = await fetch(url, {
+            credentials: 'include',
+        });
+
+        if (response.ok === false) {
+            throw new Error(`Download request failed: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const objectURL = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        const fileName = this._getDownloadFilename(response, row);
+
+        anchor.href = objectURL;
+        anchor.download = fileName;
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+
+        window.setTimeout(() => {
+            window.URL.revokeObjectURL(objectURL);
+        }, 0);
+    }
+
+    private _getDownloadFilename(
+        response: Response,
+        row: HTMLTableRowElement
+    ): string {
+        const disposition = response.headers.get('content-disposition');
+        if (disposition) {
+            const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+            if (utfMatch && utfMatch[1]) {
+                return decodeURIComponent(utfMatch[1]);
+            }
+
+            const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+            if (plainMatch && plainMatch[1]) {
+                return plainMatch[1];
+            }
+        }
+
+        const title = row.querySelector('.torTitle')?.textContent?.trim();
+        if (title) {
+            return `${title}.torrent`;
+        }
+
+        return `${row.id || 'download'}.torrent`;
+    }
+
+    private _rowLabel(row: HTMLTableRowElement): string {
+        return row.querySelector('.torTitle')?.textContent?.trim() || row.id || 'unknown row';
+    }
+
+    private async _wait(ms: number): Promise<void> {
+        await new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    private async _countdownPause(
+        button: HTMLButtonElement,
+        pauseMs: number
+    ): Promise<void> {
+        const seconds = Math.ceil(pauseMs / 1000);
+        for (let remaining = seconds; remaining > 0; remaining -= 1) {
+            button.textContent = `Next batch in ${remaining}s...`;
+            await this._wait(1000);
+        }
+        button.textContent = 'Processing...';
+    }
+
+    private _findMassActionsAnchor(): HTMLElement | null {
+        const massActions = document.querySelector('#massActions') as HTMLElement | null;
+        if (massActions !== null) {
+            return massActions;
+        }
+
+        const bookmarkActions = document.querySelector('#bookmarkActions') as HTMLElement | null;
+        if (bookmarkActions !== null) {
+            return bookmarkActions;
+        }
+
+        const massActionButton = document.querySelector(
+            'button[data-bmType]'
+        ) as HTMLButtonElement | null;
+        if (massActionButton !== null && massActionButton.parentElement !== null) {
+            return massActionButton.parentElement;
+        }
+
+        const massActionsLabel = Array.from(
+            document.querySelectorAll('h1, h2, h3, h4, strong')
+        ).find(
+            (elem) => elem.textContent?.trim().toLowerCase() === 'mass actions'
+        ) as HTMLElement | undefined;
+        if (massActionsLabel) {
+            return massActionsLabel.parentElement as HTMLElement | null;
+        }
+
+        return null;
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
+/**
  * Random Book feature to open a new tab/window with a random MAM Book
  */
 class RandomBook implements Feature {
