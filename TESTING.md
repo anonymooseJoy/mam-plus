@@ -273,16 +273,25 @@ This protects issue `#39`.
 - verifies the filetype picker writes `@filetype{...}` into the search field
 - verifies an existing `@filetype{...}` token is parsed back into checked boxes
 - verifies the plaintext toggle stores its own state without overwriting the snatched toggle state
-- verifies `Hide Bookmarked` hides bookmarked rows while leaving other rows visible
+- verifies `Hide Bookmarked` hides bookmarked rows while leaving other rows visible and shows the hidden-count label
 - verifies clickable tags are generated from plaintext tag text
 - verifies the original plaintext tag row is hidden
 - verifies the clickable-tag feature no longer inserts an extra `<br>`
 - verifies the multi-select toolbar relocates into the `Mass actions` block
 - verifies result checkboxes are injected for browse rows
+- verifies `Hide Snatched` shows the hidden-count label when rows are hidden
 - verifies `Open Selected` uses canonical `/t/<id>` URLs
 - verifies bulk download and bookmark actions only act on selected rows
 
-This protects issues `#169`, `#195`, `#232`, `#250`, `#251`, and `#252`.
+This protects issues `#118`, `#169`, `#195`, `#232`, `#250`, `#251`, and `#252`.
+
+`tests/unit/request.hiddenCounts.test.ts`
+
+- verifies hidden requester rows are counted when the request-page filter is active
+- verifies the request toggle shows the current hidden count
+- verifies showing hidden requesters restores those rows and updates the label
+
+This protects issue `#118`.
 
 `tests/unit/store.grayOut.test.ts`
 
@@ -329,6 +338,7 @@ Current smoke scenarios:
 - home page: homepage tidying removes the disclaimer while leaving unrelated blocks intact
 - new users page: `Select Max Ungifted` appears and selects the expected rows
 - freeleech page: sections collapse by default and expand on toggle
+- request page: hidden requester counts appear in the toggle label and update when hidden requesters are shown
 - browse page: bookmark override, filetype picker, bookmarked-row hiding, clickable tags, and browse multi-select all initialize together
 - store page: unaffordable purchases are disabled while affordable ones remain enabled, and target-ratio upload credit guidance is displayed
 - shoutbox page: the gift button appears and retries a gift with a lower allowed amount

@@ -10,6 +10,19 @@ const updateBrowseResultVisibility = (row: HTMLTableRowElement): void => {
     row.style.display = hiddenBySnatched || hiddenByBookmarked ? 'none' : 'table-row';
 };
 
+const formatHiddenCountLabel = (
+    visibleLabel: string,
+    hiddenLabel: string,
+    isVisible: boolean,
+    hiddenCount: number
+): string => {
+    if (isVisible || hiddenCount === 0) {
+        return visibleLabel;
+    }
+
+    return `${hiddenLabel} (${hiddenCount} hidden)`;
+};
+
 /**
  * Allows Snatched torrents to be hidden/shown
  */
@@ -71,10 +84,8 @@ class ToggleSnatched implements Feature {
                     'click',
                     () => {
                         if (this._isVisible === true) {
-                            btn.innerHTML = 'Show Snatched';
                             this._setVisState(false);
                         } else {
-                            btn.innerHTML = 'Hide Snatched';
                             this._setVisState(true);
                         }
                         this._filterResults(results, this._snatchedHook);
@@ -113,21 +124,21 @@ class ToggleSnatched implements Feature {
      * @param subTar the elements that must be contained in our filtered results
      */
     private _filterResults(list: NodeListOf<HTMLTableRowElement>, subTar: string): void {
-        list.forEach((snatch) => {
-            const btn: HTMLHeadingElement = <HTMLHeadingElement>(
-                document.querySelector('#mp_snatchedToggle')!
-            );
+        let hiddenCount = 0;
+        const btn: HTMLHeadingElement = <HTMLHeadingElement>(
+            document.querySelector('#mp_snatchedToggle')!
+        );
 
+        list.forEach((snatch) => {
             // Select only the items that match our sub element
             const result = snatch.querySelector(subTar);
 
             if (result !== null) {
                 // Hide/show as required
                 if (this._isVisible === false) {
-                    btn.innerHTML = 'Show Snatched';
                     snatch.dataset[this._rowStateKey] = 'true';
+                    hiddenCount += 1;
                 } else {
-                    btn.innerHTML = 'Hide Snatched';
                     snatch.dataset[this._rowStateKey] = 'false';
                 }
             } else {
@@ -136,6 +147,13 @@ class ToggleSnatched implements Feature {
 
             updateBrowseResultVisibility(snatch);
         });
+
+        btn.innerHTML = formatHiddenCountLabel(
+            'Hide Snatched',
+            'Show Snatched',
+            this._isVisible,
+            hiddenCount
+        );
     }
 
     private _setVisState(val: boolean): void {
@@ -254,10 +272,8 @@ class ToggleBookmarked implements Feature {
                     'click',
                     () => {
                         if (this._isVisible === true) {
-                            btn.innerHTML = 'Show Bookmarked';
                             this._setVisState(false);
                         } else {
-                            btn.innerHTML = 'Hide Bookmarked';
                             this._setVisState(true);
                         }
                         this._filterResults(results, this._bookmarkHook);
@@ -302,19 +318,19 @@ class ToggleBookmarked implements Feature {
      * @param subTar the elements that must be contained in our filtered results
      */
     private _filterResults(list: NodeListOf<HTMLTableRowElement>, subTar: string): void {
-        list.forEach((bookmark) => {
-            const btn: HTMLHeadingElement = <HTMLHeadingElement>(
-                document.querySelector('#mp_bookmarkedToggle')!
-            );
+        let hiddenCount = 0;
+        const btn: HTMLHeadingElement = <HTMLHeadingElement>(
+            document.querySelector('#mp_bookmarkedToggle')!
+        );
 
+        list.forEach((bookmark) => {
             const result = bookmark.querySelector(subTar);
 
             if (result !== null) {
                 if (this._isVisible === false) {
-                    btn.innerHTML = 'Show Bookmarked';
                     bookmark.dataset[this._rowStateKey] = 'true';
+                    hiddenCount += 1;
                 } else {
-                    btn.innerHTML = 'Hide Bookmarked';
                     bookmark.dataset[this._rowStateKey] = 'false';
                 }
             } else {
@@ -323,6 +339,13 @@ class ToggleBookmarked implements Feature {
 
             updateBrowseResultVisibility(bookmark);
         });
+
+        btn.innerHTML = formatHiddenCountLabel(
+            'Hide Bookmarked',
+            'Show Bookmarked',
+            this._isVisible,
+            hiddenCount
+        );
     }
 
     private _setVisState(val: boolean): void {

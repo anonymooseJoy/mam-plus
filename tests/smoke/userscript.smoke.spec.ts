@@ -50,6 +50,23 @@ test('freeleech synthetic page collapses and expands sections', async ({ page })
     await expect(page.locator('#fl_cat_audio_1 .mp_fl_toggle')).toHaveText('Hide');
 });
 
+test('request synthetic page shows hidden requester counts in the toggle label', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        toggleHiddenRequesters: true,
+    });
+    await loadFixturePage(page, '/tor/requests2.php', 'tests/fixtures/request.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#mp_showHidden')).toContainText('Show Hidden (2 hidden)');
+
+    await page.locator('#mp_showHidden').click();
+    await expect(page.locator('#mp_showHidden')).toContainText('Hide Hidden');
+    await expect(page.locator('#req2')).toBeVisible();
+});
+
 test('browse synthetic page applies bookmark and filetype helpers', async ({ page }) => {
     await installGMStubs(page, {
         bookmarkIcons: true,

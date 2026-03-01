@@ -47,6 +47,7 @@ describe('Browse features', () => {
         ) as HTMLElement | null;
         expect(bookmarkedToggle).not.toBeNull();
         bookmarkedToggle!.click();
+        expect(bookmarkedToggle!.textContent).toBe('Show Bookmarked (1 hidden)');
 
         const bookmarkedRow = document.querySelector('#tdr1') as HTMLTableRowElement;
         const unbookmarkedRow = document.querySelector('#tdr2') as HTMLTableRowElement;
@@ -162,6 +163,7 @@ describe('Browse features', () => {
             gmValues: {
                 mp_version: '4.4.2',
                 multiSelectBrowse: true,
+                toggleSnatched: true,
             },
             html: readFileSync('tests/fixtures/browse.html', 'utf8'),
             url: 'https://www.myanonamouse.net/tor/browse.php',
@@ -173,6 +175,11 @@ describe('Browse features', () => {
         expect(toolbar).not.toBeNull();
         expect(toolbar.className).toContain('mp_multiSelectToolbar_massActions');
         expect(document.querySelectorAll('#ssr .mp_multiSelectBox')).toHaveLength(2);
+
+        const snatchedToggle = document.querySelector('#mp_snatchedToggle') as HTMLElement | null;
+        expect(snatchedToggle).not.toBeNull();
+        snatchedToggle!.click();
+        expect(snatchedToggle!.textContent).toBe('Show Snatched (2 hidden)');
 
         (document.querySelector('#tdr1 .mp_multiSelectBox') as HTMLInputElement).checked = true;
         (document.querySelector('#tdr2 .mp_multiSelectBox') as HTMLInputElement).checked = true;
