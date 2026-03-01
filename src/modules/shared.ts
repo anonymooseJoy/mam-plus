@@ -96,7 +96,7 @@ class Shared {
                 ser.forEach((item) => {
                     const buttonTitle = ser.length > 1 ? `Series: ${item}` : 'Series';
                     const url = Util.goodreads.buildSearchURL('series', item);
-                    Util.createLinkButton(buttonTar, url, buttonTitle, 4);
+                    void Util.createButton('', buttonTitle, 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 4 });
                 });
             } else {
                 MP.warn('No series data detected!');
@@ -109,7 +109,7 @@ class Shared {
                 if (auth.length > 0) {
                     authors = auth.join(' ');
                     const url = Util.goodreads.buildSearchURL('author', authors);
-                    Util.createLinkButton(buttonTar, url, 'Author', 3);
+                    void Util.createButton('', 'Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 3 });
                 } else {
                     MP.warn('No author data detected!');
                 }
@@ -119,14 +119,14 @@ class Shared {
                 const title = await Util.getBookTitle(bookData, authors);
                 if (title !== '') {
                     const url = Util.goodreads.buildSearchURL('book', title);
-                    Util.createLinkButton(buttonTar, url, 'Title', 2);
+                    void Util.createButton('', 'Title', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 2 });
                     // If a title and author both exist, make a Title + Author button
                     if (authors !== '') {
                         const bothURL = Util.goodreads.buildSearchURL(
                             'on',
                             `${title} ${authors}`
                         );
-                        Util.createLinkButton(buttonTar, bothURL, 'Title + Author', 1);
+                        void Util.createButton('', 'Title + Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: bothURL, target: '_blank', inside: 'afterbegin', order: 1 });
                     } else if (MP.DEBUG) {
                         MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
@@ -173,7 +173,7 @@ class Shared {
                 ser.forEach((item) => {
                     const buttonTitle = ser.length > 1 ? `Series: ${item}` : 'Series';
                     const url = `https://www.audible.com/search?keywords=${item}`;
-                    Util.createLinkButton(buttonTar, url, buttonTitle, 4);
+                    void Util.createButton('', buttonTitle, 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 4 });
                 });
             } else {
                 MP.warn('No series data detected!');
@@ -186,7 +186,7 @@ class Shared {
                 if (auth.length > 0) {
                     authors = auth.join(' ');
                     const url = `https://www.audible.com/search?author_author=${authors}`;
-                    Util.createLinkButton(buttonTar, url, 'Author', 3);
+                    void Util.createButton('', 'Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 3 });
                 } else {
                     MP.warn('No author data detected!');
                 }
@@ -196,11 +196,11 @@ class Shared {
                 const title = await Util.getBookTitle(bookData, authors);
                 if (title !== '') {
                     const url = `https://www.audible.com/search?title=${title}`;
-                    Util.createLinkButton(buttonTar, url, 'Title', 2);
+                    void Util.createButton('', 'Title', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 2 });
                     // If a title and author both exist, make a Title + Author button
                     if (authors !== '') {
                         const bothURL = `https://www.audible.com/search?title=${title}&author_author=${authors}`;
-                        Util.createLinkButton(buttonTar, bothURL, 'Title + Author', 1);
+                        void Util.createButton('', 'Title + Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: bothURL, target: '_blank', inside: 'afterbegin', order: 1 });
                     } else if (MP.DEBUG) {
                         MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
@@ -248,7 +248,7 @@ class Shared {
                 ser.forEach((item) => {
                     const buttonTitle = ser.length > 1 ? `Series: ${item}` : 'Series';
                     const url = `https://app.thestorygraph.com/browse?search_term=${item}`;
-                    Util.createLinkButton(buttonTar, url, buttonTitle, 4);
+                    void Util.createButton('', buttonTitle, 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 4 });
                 });
             } else {
                 MP.warn('No series data detected!');
@@ -261,7 +261,7 @@ class Shared {
                 if (auth.length > 0) {
                     authors = auth.join(' ');
                     const url = `https://app.thestorygraph.com/browse?search_term=${authors}`;
-                    Util.createLinkButton(buttonTar, url, 'Author', 3);
+                    void Util.createButton('', 'Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 3 });
                 } else {
                     MP.warn('No author data detected!');
                 }
@@ -271,11 +271,11 @@ class Shared {
                 const title = await Util.getBookTitle(bookData, authors);
                 if (title !== '') {
                     const url = `https://app.thestorygraph.com/browse?search_term=${title}`;
-                    Util.createLinkButton(buttonTar, url, 'Title', 2);
+                    void Util.createButton('', 'Title', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: url, target: '_blank', inside: 'afterbegin', order: 2 });
                     // If a title and author both exist, make a Title + Author button
                     if (authors !== '') {
                         const bothURL = `https://app.thestorygraph.com/browse?search_term=${title} ${authors}`;
-                        Util.createLinkButton(buttonTar, bothURL, 'Title + Author', 1);
+                        void Util.createButton('', 'Title + Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: bothURL, target: '_blank', inside: 'afterbegin', order: 1 });
                     } else if (MP.DEBUG) {
                         MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
@@ -323,7 +323,7 @@ class Shared {
             if (ser.length > 0) {
                 ser.forEach((item) => {
                     const buttonTitle = ser.length > 1 ? `Series: ${item}` : 'Series';
-                    Util.createLinkButton(buttonTar, buildWorldCatURL(item), buttonTitle, 4);
+                    void Util.createButton('', buttonTitle, 'a', buttonTar, 'afterend', 'mp_button_clone', { href: buildWorldCatURL(item), target: '_blank', inside: 'afterbegin', order: 4 });
                 });
             } else {
                 MP.warn('No series data detected!');
@@ -335,12 +335,7 @@ class Shared {
             .then((auth) => {
                 if (auth.length > 0) {
                     authors = auth.join(' ');
-                    Util.createLinkButton(
-                        buttonTar,
-                        buildWorldCatURL(authors),
-                        'Author',
-                        3
-                    );
+                    void Util.createButton('', 'Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: buildWorldCatURL(authors), target: '_blank', inside: 'afterbegin', order: 3 });
                 } else {
                     MP.warn('No author data detected!');
                 }
@@ -349,15 +344,10 @@ class Shared {
             .then(async () => {
                 const title = await Util.getBookTitle(bookData, authors);
                 if (title !== '') {
-                    Util.createLinkButton(buttonTar, buildWorldCatURL(title), 'Title', 2);
+                    void Util.createButton('', 'Title', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: buildWorldCatURL(title), target: '_blank', inside: 'afterbegin', order: 2 });
                     // If a title and author both exist, make a Title + Author button
                     if (authors !== '') {
-                        Util.createLinkButton(
-                            buttonTar,
-                            buildWorldCatURL(`${title} ${authors}`),
-                            'Title + Author',
-                            1
-                        );
+                        void Util.createButton('', 'Title + Author', 'a', buttonTar, 'afterend', 'mp_button_clone', { href: buildWorldCatURL(`${title} ${authors}`), target: '_blank', inside: 'afterbegin', order: 1 });
                     } else if (MP.DEBUG) {
                         MP.log(
                             `Failed to generate Title+Author link!\nTitle: ${title}\nAuthors: ${authors}`
