@@ -430,6 +430,23 @@ test('torrent synthetic page keeps Currently Reading as a plain textarea', async
     await expect(page.locator('.mp_crRow textarea')).toHaveValue(/Synthetic Book/);
 });
 
+test('torrent synthetic page still shows external book-search buttons with text-only categories', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        audibleButton: true,
+        goodreadsButton: true,
+        mp_version: '4.4.2',
+        storyGraphButton: true,
+    });
+    await loadFixturePage(page, '/t/123', 'tests/fixtures/torrent.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('.mp_grRow')).toBeVisible();
+    await expect(page.locator('.mp_auRow')).toBeVisible();
+    await expect(page.locator('.mp_sgRow')).toBeVisible();
+});
+
 test('torrent synthetic page still enforces ratio minimum on trivial losses', async ({
     page,
 }) => {

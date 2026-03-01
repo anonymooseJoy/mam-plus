@@ -349,6 +349,13 @@ This protects issue `#165`.
 
 This protects issue `#255`.
 
+`tests/unit/tor.externalButtons.test.ts`
+
+- verifies Goodreads, Audible, and StoryGraph buttons still render when torrent categories are shown as text instead of icon markup
+- verifies the torrent-page category fallback works without relying on `.cat...` icon classes
+
+This protects issue `#209`.
+
 `tests/unit/tor.ratioProtect.test.ts`
 
 - verifies Ratio Protect still triggers level 3 when a very small ratio loss would fall below the configured minimum
@@ -391,6 +398,7 @@ Current smoke scenarios:
 - forum page: OP and staff posts are marked in forum threads
 - forum page: shoutbox emphasize and mute user lists also apply to forum threads
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
+- torrent page: Goodreads, Audible, and StoryGraph buttons still appear when categories are text-only
 - vault page: stale donation history is replaced even without a donate form
 
 Because each smoke case runs in all three engines, the full suite currently proves these scenarios across:

@@ -1,6 +1,36 @@
 /// <reference path="shared.ts" />
 /// <reference path="../util.ts" />
 
+const isBookTorrentCategory = (): boolean => {
+    const cat = document.querySelector('#fInfo [class^=cat]') as HTMLElement | null;
+    if (cat) {
+        return Check.isBookCat(parseInt(cat.className.substring(3)));
+    }
+
+    const categoryText = document.querySelector('#fInfo')?.textContent?.trim() || '';
+    if (/(^|\b)(Audiobooks|Ebooks)\b/i.test(categoryText)) {
+        return true;
+    }
+
+    const submitInfoButton = document.querySelector(
+        '#submitInfo input[data-tormissdataj]'
+    ) as HTMLInputElement | null;
+    const submitInfoData = submitInfoButton?.getAttribute('data-tormissdataj');
+
+    if (submitInfoData) {
+        try {
+            const parsed = JSON.parse(submitInfoData);
+            if (['1', '2'].includes(String(parsed.mediaType))) {
+                return true;
+            }
+        } catch (error) {
+            console.warn('[M+] Failed to parse torrent metadata for category detection.', error);
+        }
+    }
+
+    return false;
+};
+
 /**
  * * Autofills the Gift box with a specified number of points.
  */
@@ -54,8 +84,7 @@ class GoodreadsButton implements Feature {
         Util.startFeature(this._settings, this._tar, ['torrent']).then((t) => {
             if (t) {
                 // The feature should only run on book categories
-                const cat = document.querySelector('#fInfo [class^=cat]');
-                if (cat && Check.isBookCat(parseInt(cat.className.substring(3)))) {
+                if (isBookTorrentCategory()) {
                     this._init();
                 } else {
                     console.log('[M+] Not a book category; skipping Goodreads buttons');
@@ -102,8 +131,7 @@ class AudibleButton implements Feature {
         Util.startFeature(this._settings, this._tar, ['torrent']).then((t) => {
             if (t) {
                 // The feature should only run on book categories
-                const cat = document.querySelector('#fInfo [class^=cat]');
-                if (cat && Check.isBookCat(parseInt(cat.className.substring(3)))) {
+                if (isBookTorrentCategory()) {
                     this._init();
                 } else {
                     console.log('[M+] Not a book category; skipping Audible buttons');
@@ -158,8 +186,7 @@ class StoryGraphButton implements Feature {
         Util.startFeature(this._settings, this._tar, ['torrent']).then((t) => {
             if (t) {
                 // The feature should only run on book categories
-                const cat = document.querySelector('#fInfo [class^=cat]');
-                if (cat && Check.isBookCat(parseInt(cat.className.substring(3)))) {
+                if (isBookTorrentCategory()) {
                     this._init();
                 } else {
                     console.log('[M+] Not a book category; skipping StroyGraph buttons');
