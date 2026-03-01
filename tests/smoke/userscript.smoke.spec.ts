@@ -291,6 +291,31 @@ test('shoutbox synthetic page can add users to emphasize and block lists from th
     expect(storedValues.mutedUsersVal).toBe('123');
 });
 
+test('shoutbox synthetic page hides preview and settings when fullscreen is toggled', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        shoutPreview: true,
+    });
+    await loadFixturePage(page, '/shoutbox.php', 'tests/fixtures/shoutbox.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#mp_shoutPreviewBtn')).toBeVisible();
+    await expect(page.locator('#mp_shoutSettingsToggle')).toBeVisible();
+
+    await page.evaluate(() => {
+        const shoutbox = document.getElementById('shoutbox') as HTMLElement;
+        shoutbox.style.position = 'fixed';
+        shoutbox.style.inset = '0px';
+    });
+
+    await expect(page.locator('#mp_shoutPreviewBtn')).toBeHidden();
+    await expect(page.locator('#mp_shoutPreview')).toBeHidden();
+    await expect(page.locator('#mp_shoutSettingsToggle')).toBeHidden();
+    await expect(page.locator('#mp_shoutSettingsPanel')).toBeHidden();
+});
+
 test('quick shout stays visible when the shoutbox enters fullscreen', async ({ page }) => {
     await installGMStubs(page, {
         mp_version: '4.4.2',
