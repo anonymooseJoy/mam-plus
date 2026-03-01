@@ -10,39 +10,83 @@ Don't know what MAM is? This script won't be very useful to you then.
 
 [![Install Button](https://img.shields.io/badge/Install-Click%20Here-green?style=for-the-badge&logo=DocuSign)](https://github.com/gardenshade/mam-plus/raw/master/release/mam-plus.user.js)
 
-You need to have a userscript browser extension (like [Violentmonkey](https://violentmonkey.github.io/get-it/) or similar) installed in order to use MAM+. Greasemonkey is NOT recommended as it no longer follows the Userscript API standards it once set (and that MAM+ currently uses).
+You need a userscript browser extension installed in order to use MAM+.
 
-MAM+ only officially supports the most recent versions of Chrome & Firefox, but other modern browsers with userscript support should theoretically work. That said, you'll probably have lots of issues if you use Safari, Firefox offshoots (Waterfox, Basilisk, etc.), or older Edge versions.
+Recommended setup:
+
+- Chrome: [Tampermonkey](https://www.tampermonkey.net/)
+- Firefox: [Tampermonkey](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/) or [Violentmonkey](https://addons.mozilla.org/en-US/firefox/addon/violentmonkey/)
+
+Greasemonkey is not recommended for this project.
+
+MAM+ only officially supports current Chrome and Firefox. Other modern browsers with userscript support may work, but they are not a primary target.
 
 ## Modification & Contribution
 
-In case you want to modify the script and/or contribute to it, follow the below instructions. These instructions are for Chrome using Violentmonkey, as it's the easiest way to test scripts. Additionally, there's some [documentation](https://github.com/gardenshade/mam-plus/wiki) in the Wiki to help you get started with adding new features, so be sure to check that out.
+If you want to modify the script or contribute changes, follow the steps below. Additional documentation lives in the [wiki](https://github.com/gardenshade/mam-plus/wiki), and automated test workflow documentation lives in [TESTING.md](./TESTING.md).
 
 ### Prerequisites
 
--   [Node.js](https://nodejs.org/en/download/)
--   Google Chrome with [Violentmonkey](https://violentmonkey.github.io/get-it/)
--   tslint (not currently included because vscode has baked-in linting)
+- [Node.js](https://nodejs.org/en/download/)
+- A supported browser + userscript extension
+- `npm`
 
 ### Instructions
 
 #### First-time setup
 
--   Make sure the prerequisites are installed on your system
--   Clone this project to your computer
--   Open a terminal window in your project folder, and run `npm install`
--   On the Chrome extensions page (found at chrome://extensions), ensure that the Violentmonkey extension has access to file URLs
+- Install the prerequisites on your system
+- Clone this project to your computer
+- Open a terminal in the project folder and run `npm install`
+- In your browser extension settings, allow the userscript extension to access local files
 
 #### Workflow
 
-This is a Typescript project, but vanilla JavaScript is valid Typescript, so don't let a lack of knowledge of TS keep you from contributing.
+This is a TypeScript project, but plain JavaScript is valid TypeScript, so you do not need deep TS knowledge to contribute.
 
-To start developing, simply run `npm run build`. Assuming everything works, this will transpile the Typescript files into a single JavaScript file (in the `build/` dir) with a userscript header and inline sourcemaps. Additionally, the userscript will have `_dev` appended to its name, to differentiate between the developmental version and the release version.
+Useful commands:
 
-For continuous development, run `npm run watch`. This task will otherwise retranspile the script every time you save.
+```bash
+npm run build
+npm run watch
+npm run test:unit
+npm run test:smoke
+```
 
-Drag the `_dev.user.js` file into Chrome and install with Violentmonkey. When you are using the Watch task, as long as you keep the userscript installation tab open any changes you save will be automatically loaded in your browser when you reload. Occasionally, Violentmonkey will throw an error when the script is being generated via `watch`; if this happens, close the script installation page and reinstall the script as previously described.
+What they do:
 
-When you are ready to release your script, use [`npm version <patch|minor|major>`](https://docs.npmjs.com/cli/version) to increment your script. This will output a minified JavaScript file without the `_dev` suffix and will automatically generate a commit & push to the Github repo.
+- `npm run build`: builds the development userscript in `build/mam-plus_dev.user.js`
+- `npm run watch`: rebuilds automatically when TypeScript or Sass files change
+- `npm run test:unit`: runs the fast `vitest` + `jsdom` suite
+- `npm run test:smoke`: runs the Playwright smoke suite across Chromium, Firefox, and WebKit
 
-This project uses `git flow` so pull requests should not be on the `master` branch if possible.
+Install the development build into your userscript manager and test against the live site. The development build uses the `_dev` suffix so it can coexist with the release script, but you should still disable the release version while testing.
+
+For active development:
+
+1. Run `npm run watch`
+2. Refresh or reinstall `build/mam-plus_dev.user.js` in your userscript manager
+3. Reload the relevant MAM page
+4. Run unit and smoke tests for non-trivial changes
+
+### Testing
+
+Automated testing is documented in [TESTING.md](./TESTING.md). The short version:
+
+- unit tests use `vitest` + `jsdom`
+- smoke tests use Playwright with synthetic MAM fixtures
+- no private MAM HTML is committed to the repo
+
+### Releases
+
+When you are ready to produce a release build, use:
+
+```bash
+npm version <patch|minor|major>
+```
+
+This will generate the minified release userscript in `release/` and update the versioned artifacts.
+
+### Branching
+
+Use a dedicated feature or fix branch for each issue instead of working directly on `master`.
