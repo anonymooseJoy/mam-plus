@@ -71,6 +71,80 @@ class ForumPostMarkers implements Feature {
     }
 }
 
+class ForumUserFilters implements Feature {
+    private _settings: CheckboxSetting = {
+        type: 'checkbox',
+        scope: SettingGroup.Forum,
+        title: 'forumUserFilters',
+        desc: `Apply shoutbox user emphasize/block settings to forum posts.`,
+    };
+    private _tar: string = '.coltable';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['forum thread']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init() {
+        console.log('[M+] Applying forum user emphasize/block filters...');
+
+        const emphasizedUsers = Util.csvToArray(
+            GM_getValue('priorityUsers_val', '') || ''
+        ).filter((item) => item !== '');
+        const mutedUsers = Util.csvToArray(GM_getValue('mutedUsers_val', '') || '').filter(
+            (item) => item !== ''
+        );
+
+        if (!emphasizedUsers.length && !mutedUsers.length) {
+            return;
+        }
+
+        const matchesUser = (userTokens: string[], userLink: HTMLAnchorElement | null) => {
+            if (!userLink) {
+                return false;
+            }
+
+            const href = userLink.getAttribute('href') || '';
+            const userID = href.split('/').pop() || '';
+            const userName = (userLink.textContent || '').trim();
+
+            return userTokens.some((token) => {
+                return (
+                    Util.caselessStringMatch(token, userID) ||
+                    Util.caselessStringMatch(token, userName)
+                );
+            });
+        };
+
+        document.querySelectorAll('#mainBody .coltable').forEach((forumPost) => {
+            const postTable = forumPost as HTMLTableElement;
+            const userLink = <HTMLAnchorElement | null>(
+                postTable.querySelector('.colhead a[href*="/u/"]')
+            );
+            const postBody = <HTMLElement | null>postTable.querySelector('.forumText');
+
+            if (!userLink || !postBody) {
+                return;
+            }
+
+            if (matchesUser(emphasizedUsers, userLink)) {
+                postTable.classList.add('mp_forumPriorityUser');
+            }
+
+            if (matchesUser(mutedUsers, userLink)) {
+                postBody.classList.add('mp_muted');
+            }
+        });
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
 /**
  * * Allows gifting of FL wedge to members through forum.
  */

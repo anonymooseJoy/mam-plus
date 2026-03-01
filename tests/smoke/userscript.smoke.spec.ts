@@ -400,3 +400,24 @@ test('forum synthetic page marks OP and staff posts', async ({ page }) => {
         'OP'
     );
 });
+
+test('forum synthetic page applies emphasized and muted user styling', async ({ page }) => {
+    await installGMStubs(page, {
+        forumUserFilters: true,
+        mp_currentPage: 'forum thread',
+        mp_version: '4.4.2',
+        mutedUsers: true,
+        mutedUsers_val: '400',
+        priorityUsers: true,
+        priorityUsers_val: '200',
+    });
+    await loadFixturePage(page, '/f/t/999', 'tests/fixtures/forum-thread.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('a[name="1001"] + .coltable')).toHaveClass(/mp_forumPriorityUser/);
+    await expect(page.locator('a[name="1004"] + .coltable')).toHaveClass(/mp_forumPriorityUser/);
+    await expect(page.locator('a[name="1003"] + .coltable .forumText')).toHaveClass(/mp_muted/);
+    await expect(page.locator('a[name="1002"] + .coltable .forumText')).not.toHaveClass(
+        /mp_muted/
+    );
+});

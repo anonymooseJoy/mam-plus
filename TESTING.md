@@ -258,6 +258,14 @@ This protects issue `#15`.
 
 This protects issue `#16`.
 
+`tests/unit/forum.userFilters.test.ts`
+
+- verifies users from the existing emphasize list get forum post emphasis styling
+- verifies users from the existing mute list get blurred forum post text
+- verifies unrelated forum posts remain untouched
+
+This protects issue `#39`.
+
 `tests/unit/browse.features.test.ts`
 
 - verifies bookmark icon override adds the `mp_bookmarkOverride` body class when enabled
@@ -330,6 +338,7 @@ Current smoke scenarios:
 - shoutbox fullscreen: preview and settings controls are intentionally hidden
 - shoutbox fullscreen: QuickShout moves into the fullscreen overlay and back out when fullscreen is toggled
 - forum page: OP and staff posts are marked in forum threads
+- forum page: shoutbox emphasize and mute user lists also apply to forum threads
 - torrent page: `Currently Reading` stays a plain textarea with `mceNoEditor`
 - vault page: stale donation history is replaced even without a donate form
 
