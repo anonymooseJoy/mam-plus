@@ -375,6 +375,15 @@ a[class^='mp_mark_'] {
     background: linear-gradient(180deg, #b42c59 0%, #7c1636 100%);
     color: #fff;
 }
+.mp_forumPriorityUser {
+    .colhead {
+        background: rgba(23, 148, 187, 0.2);
+    }
+
+    .forumText {
+        box-shadow: inset 5px 0 0 rgba(23, 148, 187, 0.92), inset 0 0 0 1px rgba(23, 148, 187, 0.32);
+    }
+}
 #mp_giftStatusElem {
     font-family: monospace;
     color: white;
