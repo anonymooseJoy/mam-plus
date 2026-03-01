@@ -36,6 +36,37 @@ class GiftNewest implements Feature {
         })
     }
 
+    private _getAvailableBonusPointsText(): string {
+        const bonusPointElem =
+            document.getElementById('tmBP') || document.getElementById('bonusLink');
+
+        if (!bonusPointElem || !bonusPointElem.textContent) {
+            return 'Bonus: unavailable';
+        }
+
+        let bonusPointsAvail = bonusPointElem.textContent.trim();
+
+        if (bonusPointsAvail.indexOf('(') >= 0) {
+            bonusPointsAvail = bonusPointsAvail.substring(
+                0,
+                bonusPointsAvail.indexOf('(')
+            ).trim();
+        }
+
+        return bonusPointsAvail;
+    }
+
+    private _getAvailableBonusPointsValue(): number {
+        const bonusPointText = this._getAvailableBonusPointsText();
+        const match = bonusPointText.match(/[\d,]+/);
+
+        if (match === null) {
+            return 0;
+        }
+
+        return parseInt(match[0].replace(/,/g, ''));
+    }
+
     /**
      * * Function that runs on the Home page
      */
@@ -200,14 +231,7 @@ class GiftNewest implements Feature {
             false
         );
         //get the current amount of bonus points available to spend
-        let bonusPointsAvail: string = document.getElementById('tmBP')!.innerText;
-        //get rid of the delta display
-        if (bonusPointsAvail.indexOf('(') >= 0) {
-            bonusPointsAvail = bonusPointsAvail.substring(
-                0,
-                bonusPointsAvail.indexOf('(')
-            );
-        }
+        const bonusPointsAvail = this._getAvailableBonusPointsText();
         //recreate the bonus points in new span and insert into fpNM
         const messageSpan: HTMLElement = document.createElement('span');
         messageSpan.setAttribute('id', 'mp_giftAllMsg');
@@ -228,20 +252,15 @@ class GiftNewest implements Feature {
         this._trimGiftList();
         Util.getRecentPointGifts();
 
-        // Select the container holding the newest members
-        const fpNM = document.querySelector('.blockCon') as HTMLDivElement;
-        const footer = document.querySelector('.blockFoot') as HTMLDivElement;
+        const fpNM = this._getNewUsersContainer();
+        const footer = this._getNewUsersFooter(fpNM);
+
+        if (!fpNM || !footer) {
+            console.warn('[M+] Unable to find the New Users gifting container/footer.');
+            return;
+        }
+
         const memberLabels = this._getNewUsersMembers(fpNM);
-        const getAvailablePoints = (): number => {
-            const bonusPointText = document.getElementById('tmBP')!.innerText.split(':')[1];
-            const match = bonusPointText.match(/[\d,]+/);
-
-            if (match === null) {
-                return 0;
-            }
-
-            return parseInt(match[0].replace(/,/g, ''));
-        };
 
         // Loop through each member and check if they were previously gifted
         memberLabels.forEach(({ member }) => {
@@ -366,7 +385,7 @@ class GiftNewest implements Feature {
         });
 
         // Display available bonus points in the footer
-        let bonusPointsAvail = document.getElementById('tmBP')!.innerText.split(':')[1];
+        const bonusPointsAvail = this._getAvailableBonusPointsText().replace(/^Bonus:\s*/i, '');
         const messageSpan = document.createElement('span');
         messageSpan.id = 'mp_giftAllMsg';
         messageSpan.innerText = ` Available Points: ${bonusPointsAvail}`;
@@ -425,7 +444,7 @@ class GiftNewest implements Feature {
             'Select the maximum number of ungifted users you can afford at the current gift size';
         selectMaxUngiftedBtn.addEventListener('click', () => {
             const giftAmount = Number(giftAmounts.value);
-            const availablePoints = getAvailablePoints();
+            const availablePoints = this._getAvailableBonusPointsValue();
 
             if (giftAmount < 5 || giftAmount > 100 || isNaN(giftAmount) || giftAmount === 0) {
                 console.warn('[M+] Cannot select max ungifted users; gift amount is invalid.');
@@ -462,6 +481,40 @@ class GiftNewest implements Feature {
         footer.appendChild(messageSpan);
 
         console.log('[M+] Added gifting options to the footer of the page.');
+    }
+
+    private _getNewUsersContainer(): HTMLDivElement | null {
+        const blockContainers = Array.from(
+            document.querySelectorAll('.blockCon')
+        ) as HTMLDivElement[];
+
+        return (
+            blockContainers.find(
+                (container) => this._getNewUsersMembers(container).length > 0
+            ) || null
+        );
+    }
+
+    private _getNewUsersFooter(container: HTMLDivElement): HTMLDivElement | null {
+        const footerInContainer = container.querySelector('.blockFoot') as HTMLDivElement | null;
+        if (footerInContainer) {
+            return footerInContainer;
+        }
+
+        let sibling = container.nextElementSibling;
+        while (sibling) {
+            if (sibling instanceof HTMLDivElement && sibling.classList.contains('blockFoot')) {
+                return sibling;
+            }
+
+            if (sibling instanceof HTMLDivElement && sibling.classList.contains('blockCon')) {
+                break;
+            }
+
+            sibling = sibling.nextElementSibling;
+        }
+
+        return null;
     }
 
     /**
