@@ -341,6 +341,14 @@ This protects issue `#165`.
 
 This protects issue `#255`.
 
+`tests/unit/tor.ratioProtect.test.ts`
+
+- verifies Ratio Protect still triggers level 3 when a very small ratio loss would fall below the configured minimum
+- verifies the download button switches to `FL Needed`
+- verifies the ratio warning label is bolded and the recovery row still renders
+
+This protects issue `#201`.
+
 `tests/unit/vault.potHistory.test.ts`
 
 - verifies donation history is refreshed from `/millionaires/pot.php`

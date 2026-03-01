@@ -410,6 +410,23 @@ test('torrent synthetic page keeps Currently Reading as a plain textarea', async
     await expect(page.locator('.mp_crRow textarea')).toHaveValue(/Synthetic Book/);
 });
 
+test('torrent synthetic page still enforces ratio minimum on trivial losses', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        mp_version: '4.4.2',
+        mp_currentPage: 'torrent',
+        ratioProtect: true,
+        ratioProtectMin_val: '100',
+    });
+    await loadFixturePage(page, '/t/999', 'tests/fixtures/torrent-ratio-protect.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#tddl')).toContainText('FL Needed');
+    await expect(page.locator('#download .torDetInnerTop')).toContainText('Ratio loss 0.00');
+    await expect(page.locator('.mp_ratioCostRow')).toContainText('upload');
+});
+
 test('vault synthetic page replaces stale donation history without a donate form', async ({
     page,
 }) => {
