@@ -89,6 +89,7 @@ class InitFeatures {
         new Notes();
 
         // Initialize Forum Page functions
+        new ForumMarkRead();
         new ForumPostMarkers();
         new ForumUserFilters();
         new ForumFLGift();

@@ -416,7 +416,6 @@ test('forum synthetic page marks OP and staff posts', async ({ page }) => {
     });
     await loadFixturePage(page, '/f/t/999', 'tests/fixtures/forum-thread.html');
     await loadUserscript(page);
-
     await expect(page.locator('a[name="1001"] + .coltable .mp_forumPostMarker_op')).toContainText(
         'OP'
     );
@@ -428,6 +427,26 @@ test('forum synthetic page marks OP and staff posts', async ({ page }) => {
     ).toContainText('Staff');
     await expect(page.locator('a[name="1004"] + .coltable .mp_forumPostMarker_op')).toContainText(
         'OP'
+    );
+});
+
+test('forum overview synthetic page adds mark-read buttons for forum rows', async ({
+    page,
+}) => {
+    await installGMStubs(page, {
+        forumMarkRead: true,
+        mp_version: '4.4.2',
+    });
+    await loadFixturePage(page, '/f', 'tests/fixtures/forums-overview.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('#mp_forumMarkRead_39')).toHaveAttribute(
+        'href',
+        'https://www.myanonamouse.net/f/b/39&markRead=true'
+    );
+    await expect(page.locator('#mp_forumMarkRead_78')).toHaveAttribute(
+        'href',
+        'https://www.myanonamouse.net/f/b/78&markRead=true'
     );
 });
 

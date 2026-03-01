@@ -384,6 +384,12 @@ a[class^='mp_mark_'] {
     background: linear-gradient(180deg, #b42c59 0%, #7c1636 100%);
     color: #fff;
 }
+.mp_forumMarkReadBtn {
+    margin-left: 6px;
+    font-size: 0.85em;
+    padding: 0 4px;
+    line-height: 1.4;
+}
 .mp_forumPriorityUser {
     .colhead {
         background: rgba(23, 148, 187, 0.2);
