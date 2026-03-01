@@ -45,7 +45,7 @@ class GrayOutStorePurchases implements Feature {
         });
 
         this._markDisabledSections();
-        console.log("[M+] Disabled store purchases you can't afford!");
+        MP.log("[M+] Disabled store purchases you can't afford!");
     }
 
     private _getCurrency(selector: string): number {
@@ -259,7 +259,7 @@ class CostToSetRatio implements Feature {
     private _init() {
         this._render();
         this._watchForChanges();
-        console.log('[M+] Added cost to set ratio to the store page!');
+        MP.log('[M+] Added cost to set ratio to the store page!');
     }
 
     private _render() {

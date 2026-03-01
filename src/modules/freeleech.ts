@@ -26,7 +26,7 @@ class CollapseFreeleechSections implements Feature {
         ) as HTMLDivElement[];
 
         if (sections.length === 0) {
-            console.warn('[M+] Could not find freeleech sections to collapse.');
+            MP.warn('[M+] Could not find freeleech sections to collapse.');
             return;
         }
 
@@ -37,7 +37,7 @@ class CollapseFreeleechSections implements Feature {
         }
 
         sections.forEach((section) => this._collapseSection(section));
-        console.log('[M+] Collapsed freeleech sections!');
+        MP.log('[M+] Collapsed freeleech sections!');
     }
 
     private _normalizeLayout(listBlock: Element) {

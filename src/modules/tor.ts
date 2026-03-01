@@ -24,7 +24,7 @@ const isBookTorrentCategory = (): boolean => {
                 return true;
             }
         } catch (error) {
-            console.warn('[M+] Failed to parse torrent metadata for category detection.', error);
+            MP.warn('[M+] Failed to parse torrent metadata for category detection.', error);
         }
     }
 
@@ -162,7 +162,7 @@ class TorGiftDefault implements Feature {
         new Shared()
             .fillGiftBox(this._tar, this._settings.title)
             .then((points) =>
-                console.log(`[M+] Set the default gift amount to ${points}`)
+                MP.log(`[M+] Set the default gift amount to ${points}`)
             );
     }
 
@@ -191,7 +191,7 @@ class GoodreadsButton implements Feature {
                 if (isBookTorrentCategory()) {
                     this._init();
                 } else {
-                    console.log('[M+] Not a book category; skipping Goodreads buttons');
+                    MP.log('[M+] Not a book category; skipping Goodreads buttons');
                 }
             }
         });
@@ -238,7 +238,7 @@ class AudibleButton implements Feature {
                 if (isBookTorrentCategory()) {
                     this._init();
                 } else {
-                    console.log('[M+] Not a book category; skipping Audible buttons');
+                    MP.log('[M+] Not a book category; skipping Audible buttons');
                 }
             }
         });
@@ -293,7 +293,7 @@ class StoryGraphButton implements Feature {
                 if (isBookTorrentCategory()) {
                     this._init();
                 } else {
-                    console.log('[M+] Not a book category; skipping StroyGraph buttons');
+                    MP.log('[M+] Not a book category; skipping StroyGraph buttons');
                 }
             }
         });
@@ -346,7 +346,7 @@ class CurrentlyReading implements Feature {
     }
 
     private async _init() {
-        console.log('[M+] Adding Currently Reading section...');
+        MP.log('[M+] Adding Currently Reading section...');
         // Get the required information
         const title: string = document!.querySelector('#torDetMainCon .TorrentTitle')!
             .textContent!;
@@ -449,7 +449,7 @@ class RatioProtect implements Feature {
         });
     }
     private async _init() {
-        console.log('[M+] Enabling ratio protection...');
+        MP.log('[M+] Enabling ratio protection...');
         // TODO: Move this block to shared
         // The download text area
         const dlBtn: HTMLAnchorElement | null = document.querySelector('#tddl');
@@ -470,7 +470,7 @@ class RatioProtect implements Feature {
 
         // Get the custom ratio amounts (will return default values otherwise)
         const [r1, r2, r3] = await this._share.getRatioProtectLevels();
-        if (MP.DEBUG) console.log(`Ratio protection levels set to: ${r1}, ${r2}, ${r3}`);
+        if (MP.DEBUG) MP.log(`Ratio protection levels set to: ${r1}, ${r2}, ${r3}`);
 
         // Create the box we will display text in
         if (descBlock) {
@@ -488,7 +488,7 @@ class RatioProtect implements Feature {
             const rDiff = Util.extractFloat(rCur)[0] - Util.extractFloat(rNew)[0];
 
             if (MP.DEBUG)
-                console.log(
+                MP.log(
                     `Current ${Util.extractFloat(rCur)[0]} | New ${
                         Util.extractFloat(rNew)[0]
                     } | Dif ${rDiff}`
@@ -584,7 +584,7 @@ class RatioProtect implements Feature {
             tar.innerHTML = 'Suggest FL';
         } else if (state === '3_alert') {
             if (!label) {
-                console.warn(`No label provided in _setButtonState()!`);
+                MP.warn(`No label provided in _setButtonState()!`);
             }
             tar.style.backgroundColor = 'Red';
             tar.style.setProperty('background-color', 'Red', 'important');
@@ -630,7 +630,7 @@ class RatioProtectL1 implements Feature {
     }
 
     private _init() {
-        console.log('[M+] Enabled custom Ratio Protection L1!');
+        MP.log('[M+] Enabled custom Ratio Protection L1!');
     }
 
     get settings(): TextboxSetting {
@@ -661,7 +661,7 @@ class RatioProtectL2 implements Feature {
     }
 
     private _init() {
-        console.log('[M+] Enabled custom Ratio Protection L2!');
+        MP.log('[M+] Enabled custom Ratio Protection L2!');
     }
 
     get settings(): TextboxSetting {
@@ -692,7 +692,7 @@ class RatioProtectL3 implements Feature {
     }
 
     private _init() {
-        console.log('[M+] Enabled custom Ratio Protection L3!');
+        MP.log('[M+] Enabled custom Ratio Protection L3!');
     }
 
     get settings(): TextboxSetting {
@@ -721,7 +721,7 @@ class RatioProtectMin implements Feature {
         });
     }
     private async _init() {
-        console.log('[M+] Enabled custom Ratio Protection minimum!');
+        MP.log('[M+] Enabled custom Ratio Protection minimum!');
     }
     get settings(): TextboxSetting {
         return this._settings;
@@ -749,7 +749,7 @@ class RatioProtectIcons implements Feature {
         });
     }
     private async _init() {
-        console.log(
+        MP.log(
             `[M+] Enabling custom Ratio Protect favicons from user ${this._userID}...`
         );
 
@@ -782,7 +782,7 @@ class RatioProtectIcons implements Feature {
 
         // Test if VIP
         if (vipstat) {
-            if (MP.DEBUG) console.log(`VIP = ${vipstat}`);
+            if (MP.DEBUG) MP.log(`VIP = ${vipstat}`);
 
             if (vipstat.search('VIP expires') > -1) {
                 this._buildIconLinks(siteFavicons, 'mouseclock');
@@ -852,7 +852,7 @@ class RatioProtectIcons implements Feature {
             }
         }
 
-        console.log('[M+] Custom Ratio Protect favicons enabled!');
+        MP.log('[M+] Custom Ratio Protect favicons enabled!');
     }
 
     // TODO: Function for calculating when FL ends

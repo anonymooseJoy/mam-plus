@@ -62,7 +62,7 @@ class SearchForDuplicates implements Feature {
                 rowPosition: 12,
             });
         }
-        console.log(`[M+] Adding search to uploads!`);
+        MP.log(`[M+] Adding search to uploads!`);
     }
     private _generateSearch({
         parentElement,

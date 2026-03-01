@@ -26,7 +26,7 @@ class Alerts implements Feature {
 
     public notify(kind: string | boolean, log: ArrayObject): Promise<any> {
         if (MP.DEBUG) {
-            console.group(`Alerts.notify( ${kind} )`);
+            MP.group(`Alerts.notify( ${kind} )`);
         }
 
         return new Promise((resolve) => {
@@ -40,7 +40,7 @@ class Alerts implements Feature {
                         title: string
                     ): string | undefined => {
                         if (MP.DEBUG) {
-                            console.log(`buildMsg( ${title} )`);
+                            MP.log(`buildMsg( ${title} )`);
                         }
                         // Make sure the array isn't empty
                         if (arr.length > 0 && arr[0] !== '') {
@@ -61,7 +61,7 @@ class Alerts implements Feature {
                     // Internal function to build notification panel
                     const buildPanel = (msg: string): void => {
                         if (MP.DEBUG) {
-                            console.log(`buildPanel( ${msg} )`);
+                            MP.log(`buildPanel( ${msg} )`);
                         }
                         Check.elemLoad('body').then(() => {
                             document.body.innerHTML += `<div class='mp_notification'>${msg}<span>X</span></div>`;
@@ -86,7 +86,7 @@ class Alerts implements Feature {
                                 }
                             } catch (err) {
                                 if (MP.DEBUG) {
-                                    console.log(err);
+                                    MP.log(err);
                                 }
                             }
                         });
@@ -96,7 +96,7 @@ class Alerts implements Feature {
 
                     if (kind === 'updated') {
                         if (MP.DEBUG) {
-                            console.log('Building update message');
+                            MP.log('Building update message');
                         }
                         // Start the message
                         message = `<strong>MAM+ has been updated!</strong> You are now using v${MP.VERSION}, created on ${MP.TIMESTAMP}. Discuss it on <a href='forums.php?action=viewtopic&topicid=41863'>the forums</a>.<hr>`;
@@ -107,22 +107,22 @@ class Alerts implements Feature {
                         message =
                             '<h4>Welcome to MAM+!</h4>Please head over to your <a href="/preferences/index.php">preferences</a> to enable the MAM+ settings.<br>Any bug reports, feature requests, etc. can be made on <a href="https://github.com/gardenshade/mam-plus/issues">Github</a>, <a href="/forums.php?action=viewtopic&topicid=41863">the forums</a>, or <a href="/sendmessage.php?receiver=108303">through private message</a>.';
                         if (MP.DEBUG) {
-                            console.log('Building first run message');
+                            MP.log('Building first run message');
                         }
                     } else if (MP.DEBUG) {
-                        console.warn(`Received msg kind: ${kind}`);
+                        MP.warn(`Received msg kind: ${kind}`);
                     }
                     buildPanel(message);
 
                     if (MP.DEBUG) {
-                        console.groupEnd();
+                        MP.groupEnd();
                     }
                     resolve(true);
                     // Notifications are disabled
                 } else {
                     if (MP.DEBUG) {
-                        console.log('Notifications are disabled.');
-                        console.groupEnd();
+                        MP.log('Notifications are disabled.');
+                        MP.groupEnd();
                     }
                     resolve(false);
                 }

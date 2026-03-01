@@ -15,7 +15,7 @@ class Check {
         selector: string | HTMLElement
     ): Promise<HTMLElement | false> {
         if (MP.DEBUG) {
-            console.log(`%c Looking for ${selector}`, 'background: #222; color: #555');
+            MP.log(`%c Looking for ${selector}`, 'background: #222; color: #555');
         }
         let _counter = 0;
         const _counterLimit = 200;
@@ -70,7 +70,7 @@ class Check {
             }
         }
         if (MP.DEBUG) {
-            console.log(
+            MP.log(
                 `%c Setting observer on ${selector}: ${selected}`,
                 'background: #222; color: #5d8aa8'
             );
@@ -87,30 +87,30 @@ class Check {
      */
     public static updated(): Promise<string | boolean> {
         if (MP.DEBUG) {
-            console.group('Check.updated()');
-            console.log(`PREV VER = ${this.prevVer}`);
-            console.log(`NEW VER = ${this.newVer}`);
+            MP.group('Check.updated()');
+            MP.log(`PREV VER = ${this.prevVer}`);
+            MP.log(`NEW VER = ${this.newVer}`);
         }
         return new Promise((resolve) => {
             // Different versions; the script was updated
             if (this.newVer !== this.prevVer) {
                 if (MP.DEBUG) {
-                    console.log('Script is new or updated');
+                    MP.log('Script is new or updated');
                 }
                 // Store the new version
                 GM_setValue('mp_version', this.newVer);
                 if (this.prevVer) {
                     // The script has run before
                     if (MP.DEBUG) {
-                        console.log('Script has run before');
-                        console.groupEnd();
+                        MP.log('Script has run before');
+                        MP.groupEnd();
                     }
                     resolve('updated');
                 } else {
                     // First-time run
                     if (MP.DEBUG) {
-                        console.log('Script has never run');
-                        console.groupEnd();
+                        MP.log('Script has never run');
+                        MP.groupEnd();
                     }
                     // Enable the most basic features
                     GM_setValue('goodreadsBtn', true);
@@ -119,8 +119,8 @@ class Check {
                 }
             } else {
                 if (MP.DEBUG) {
-                    console.log('Script not updated');
-                    console.groupEnd();
+                    MP.log('Script not updated');
+                    MP.groupEnd();
                 }
                 resolve(false);
             }
@@ -158,7 +158,7 @@ class Check {
                 page.shift();
 
                 if (MP.DEBUG) {
-                    console.log(`Page URL @ ${page.join(' -> ')}`);
+                    MP.log(`Page URL @ ${page.join(' -> ')}`);
                 }
 
                 // Create an object literal of sorts to use as a "switch"
@@ -191,7 +191,7 @@ class Check {
                 if (cases[page[0]]) {
                     currentPage = cases[page[0]]();
                 } else {
-                    console.warn(`Page "${page}" is not a valid M+ page. Path: ${path}`);
+                    MP.warn(`Page "${page}" is not a valid M+ page. Path: ${path}`);
                 }
 
                 if (currentPage !== undefined) {
@@ -210,7 +210,7 @@ class Check {
                 }
             }
             if (MP.DEBUG) {
-                console.groupEnd();
+                MP.groupEnd();
             }
         });
     }

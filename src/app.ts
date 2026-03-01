@@ -29,6 +29,7 @@
  */
 namespace MP {
     export const DEBUG: boolean | undefined = GM_getValue('debug') ? true : false;
+    const NATIVE_CONSOLE = globalThis.console;
     export const CHANGELOG: ArrayObject = {
         /* 🆕♻️🐞 */
         UPDATE_LIST: [
@@ -45,11 +46,25 @@ namespace MP {
     export const MP_CSS: Style = new Style();
     export const settingsGlob: AnyFeature[] = [];
 
+    const writeLog = (level: 'log' | 'info' | 'warn' | 'error' | 'debug', ...args: unknown[]) => {
+        if (level === 'debug' && !DEBUG) return;
+        NATIVE_CONSOLE[level](...args);
+    };
+
+    export const log = (...args: unknown[]) => writeLog('log', ...args);
+    export const info = (...args: unknown[]) => writeLog('info', ...args);
+    export const warn = (...args: unknown[]) => writeLog('warn', ...args);
+    export const error = (...args: unknown[]) => writeLog('error', ...args);
+    export const debug = (...args: unknown[]) => writeLog('debug', ...args);
+    export const group = (...args: unknown[]) => NATIVE_CONSOLE.group(...args);
+    export const groupEnd = () => NATIVE_CONSOLE.groupEnd();
+    export const featureLog = (message: string) => log(`[M+] ${message}`);
+
     export const run = async () => {
         /**
          * * PRE SCRIPT
          */
-        console.group(`Welcome to MAM+ v${VERSION}!`);
+        group(`Welcome to MAM+ v${VERSION}!`);
 
         // The current page is not yet known
         GM_deleteValue('mp_currentPage');
@@ -87,7 +102,7 @@ namespace MP {
             MP_CSS.alignToSiteTheme();
         });
 
-        console.groupEnd();
+        groupEnd();
     };
 }
 

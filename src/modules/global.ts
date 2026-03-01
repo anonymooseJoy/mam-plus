@@ -32,10 +32,10 @@ class HideHome implements Feature {
         const hider: string = GM_getValue(this._settings.title);
         if (hider === 'hideHome') {
             document.body.classList.add('mp_hide_home');
-            console.log('[M+] Hid the home button!');
+            MP.log('[M+] Hid the home button!');
         } else if (hider === 'hideBanner') {
             document.body.classList.add('mp_hide_banner');
-            console.log('[M+] Hid the banner!');
+            MP.log('[M+] Hid the banner!');
         }
     }
 
@@ -70,7 +70,7 @@ class BookmarkIcons implements Feature {
 
     private _init() {
         document.body.classList.add('mp_bookmarkOverride');
-        console.log('[M+] Enabled custom bookmark icons!');
+        MP.log('[M+] Enabled custom bookmark icons!');
     }
 
     get settings(): CheckboxSetting {
@@ -102,7 +102,7 @@ class VaultLink implements Feature {
         document
             .querySelector(this._tar)!
             .setAttribute('href', '/millionaires/donate.php');
-        console.log('[M+] Made the vault text link to the donate page!');
+        MP.log('[M+] Made the vault text link to the donate page!');
     }
 
     get settings(): CheckboxSetting {
@@ -152,7 +152,7 @@ class MiniVaultInfo implements Feature {
         newText = Number((newText / 1e6).toFixed(3));
         // Update the vault text
         vaultText.textContent = `Vault: ${newText} million`;
-        console.log('[M+] Shortened the vault & ratio numbers!');
+        MP.log('[M+] Shortened the vault & ratio numbers!');
     }
 
     get settings(): CheckboxSetting {
@@ -271,7 +271,7 @@ class BlurredHeader implements Feature {
             blurredBack.classList.add('mp_container');
         }
 
-        console.log('[M+] Added a blurred background to the header!');
+        MP.log('[M+] Added a blurred background to the header!');
     }
 
     // This must match the type selected for `this._settings`
@@ -305,7 +305,7 @@ class HideSeedbox implements Feature {
         const seedboxBtn: HTMLLIElement | null = document.querySelector(this._tar);
         if (seedboxBtn) {
             seedboxBtn.style.display = 'none';
-            console.log('[M+] Hid the Seedbox button!');
+            MP.log('[M+] Hid the Seedbox button!');
         }
     }
     get settings(): CheckboxSetting {
@@ -338,7 +338,7 @@ class HideDonationBox implements Feature {
         const donationBoxBtn: HTMLLIElement | null = document.querySelector(this._tar);
         if (donationBoxBtn) {
             donationBoxBtn.style.display = 'none';
-            console.log('[M+] Hid the Donation Box button!');
+            MP.log('[M+] Hid the Donation Box button!');
         }
     }
     get settings(): CheckboxSetting {
@@ -367,7 +367,7 @@ class FixedNav implements Feature {
     }
     private async _init() {
         document.querySelector('body')!.classList.add('mp_fixed_nav');
-        console.log('[M+] Pinned the nav/search to the top!');
+        MP.log('[M+] Pinned the nav/search to the top!');
     }
     get settings(): CheckboxSetting {
         return this._settings;

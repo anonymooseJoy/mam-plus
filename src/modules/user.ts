@@ -32,7 +32,7 @@ class UserGiftDefault implements Feature {
         new Shared()
             .fillGiftBox(this._tar, this._settings.title)
             .then((points) =>
-                console.log(`[M+] Set the default gift amount to ${points}`)
+                MP.log(`[M+] Set the default gift amount to ${points}`)
             );
     }
 
@@ -62,7 +62,7 @@ class UserGiftHistory implements Feature {
         });
     }
     private async _init() {
-        console.log('[M+] Initiallizing user gift history...');
+        MP.log('[M+] Initiallizing user gift history...');
 
         // Name of the other user
         const otherUser = document.querySelector('#mainBody > h1')!.textContent!.trim();
@@ -112,17 +112,17 @@ class UserGiftHistory implements Feature {
             const [pointsIn, pointsOut] = this._sumGifts(giftHistory, 'giftPoints');
             const [wedgeIn, wedgeOut] = this._sumGifts(giftHistory, 'giftWedge');
             if (MP.DEBUG) {
-                console.log(`Points In/Out: ${pointsIn}/${pointsOut}`);
-                console.log(`Wedges In/Out: ${wedgeIn}/${wedgeOut}`);
+                MP.log(`Points In/Out: ${pointsIn}/${pointsOut}`);
+                MP.log(`Wedges In/Out: ${wedgeIn}/${wedgeOut}`);
             }
             const otherUser = giftHistory[0].other_name;
             // Generate a message
             historyBox.innerHTML = `You have sent ${this._sendSymbol} <strong>${pointsOut} points</strong> &amp; <strong>${wedgeOut} FL wedges</strong> to ${otherUser} and received ${this._getSymbol} <strong>${pointsIn} points</strong> &amp; <strong>${wedgeIn} FL wedges</strong>.<hr>`;
             // Add the message to the box
             historyBox.appendChild(this._showGifts(giftHistory));
-            console.log('[M+] User gift history added!');
+            MP.log('[M+] User gift history added!');
         } else {
-            console.log(`[M+] No user gift history found with ${userID}.`);
+            MP.log(`[M+] No user gift history found with ${userID}.`);
         }
     }
 
@@ -139,16 +139,16 @@ class UserGiftHistory implements Feature {
             const [pointsIn, pointsOut] = this._sumGifts(giftHistory, 'giftPoints');
             const [wedgeIn, wedgeOut] = this._sumGifts(giftHistory, 'giftWedge');
             if (MP.DEBUG) {
-                console.log(`Points In/Out: ${pointsIn}/${pointsOut}`);
-                console.log(`Wedges In/Out: ${wedgeIn}/${wedgeOut}`);
+                MP.log(`Points In/Out: ${pointsIn}/${pointsOut}`);
+                MP.log(`Wedges In/Out: ${wedgeIn}/${wedgeOut}`);
             }
             // Generate a message
             historyBox.innerHTML = `You have sent ${this._sendSymbol} <strong>${pointsOut} points</strong> &amp; <strong>${wedgeOut} FL wedges</strong> and received ${this._getSymbol} <strong>${pointsIn} points</strong> &amp; <strong>${wedgeIn} FL wedges</strong>.<hr>`;
             // Add the message to the box
             historyBox.appendChild(this._showGifts(giftHistory));
-            console.log('[M+] User gift history added!');
+            MP.log('[M+] User gift history added!');
         } else {
-            console.log(`[M+] No user gift history found for current user.`);
+            MP.log(`[M+] No user gift history found for current user.`);
         }
     }
 
@@ -261,7 +261,7 @@ class Notes implements Feature {
 
             const userID = window.location.pathname.match(/\/u\/(\d+)/)?.[1];
             if (!userID) {
-                console.error("User ID not found in URL.");
+                MP.error("User ID not found in URL.");
                 return;
             }
 
@@ -291,10 +291,10 @@ class Notes implements Feature {
 
                 if (noteValue === '') {
                     GM_deleteValue(`user_notes_${userID}_val`);
-                    console.log(`Note for user ${userID} has been cleared.`);
+                    MP.log(`Note for user ${userID} has been cleared.`);
                 } else {
                     GM_setValue(`user_notes_${userID}_val`, noteValue);
-                    console.log(`Note for user ${userID} saved: ${noteValue}`);
+                    MP.log(`Note for user ${userID} saved: ${noteValue}`);
                 }
 
                 // Show the "Saved!" message briefly
@@ -310,7 +310,7 @@ class Notes implements Feature {
             newRow.appendChild(newCell);
             tbody.appendChild(newRow);
         } else {
-            console.error('Table with class "coltable" not found.');
+            MP.error('Table with class "coltable" not found.');
         }
     }
 

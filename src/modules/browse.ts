@@ -102,7 +102,7 @@ class ToggleSnatched implements Feature {
                 results = res;
                 this._searchList = res;
                 this._filterResults(results, this._snatchedHook);
-                console.log('[M+] Added the Toggle Snatched button!');
+                MP.log('[M+] Added the Toggle Snatched button!');
             })
             .then(() => {
                 // Observe the Search results
@@ -158,7 +158,7 @@ class ToggleSnatched implements Feature {
 
     private _setVisState(val: boolean): void {
         if (MP.DEBUG) {
-            console.log('Snatch vis state:', this._isVisible, '\nval:', val);
+            MP.log('Snatch vis state:', this._isVisible, '\nval:', val);
         }
         GM_setValue(`${this._settings.title}State`, `${val}`);
         this._isVisible = val;
@@ -205,7 +205,7 @@ class StickySnatchedToggle implements Feature {
     }
 
     private _init() {
-        console.log('[M+] Remembered snatch visibility state!');
+        MP.log('[M+] Remembered snatch visibility state!');
     }
 
     get settings(): CheckboxSetting {
@@ -290,7 +290,7 @@ class ToggleBookmarked implements Feature {
                 results = res;
                 this._searchList = res;
                 this._filterResults(results, this._bookmarkHook);
-                console.log('[M+] Added the Toggle Bookmarked button!');
+                MP.log('[M+] Added the Toggle Bookmarked button!');
             })
             .then(() => {
                 Check.elemObserver(
@@ -350,7 +350,7 @@ class ToggleBookmarked implements Feature {
 
     private _setVisState(val: boolean): void {
         if (MP.DEBUG) {
-            console.log('Bookmark vis state:', this._isVisible, '\nval:', val);
+            MP.log('Bookmark vis state:', this._isVisible, '\nval:', val);
         }
         GM_setValue(`${this._settings.title}State`, `${val}`);
         this._isVisible = val;
@@ -397,7 +397,7 @@ class StickyBookmarkedToggle implements Feature {
     }
 
     private _init() {
-        console.log('[M+] Remembered bookmark visibility state!');
+        MP.log('[M+] Remembered bookmark visibility state!');
     }
 
     get settings(): CheckboxSetting {
@@ -520,7 +520,7 @@ class PlaintextSearch implements Feature {
                 throw new Error(err);
             });
 
-        console.log('[M+] Inserted plaintext search results!');
+        MP.log('[M+] Inserted plaintext search results!');
     }
 
     /**
@@ -558,7 +558,7 @@ class PlaintextSearch implements Feature {
             );
 
             if (rawTitle === null) {
-                console.warn('Error Node:', node);
+                MP.warn('Error Node:', node);
                 throw new Error(`Result title should not be null`);
             } else {
                 title = rawTitle.textContent!.trim();
@@ -647,7 +647,7 @@ class ToggleSearchbox implements Feature {
                     this._toggle(searchbox!);
                 });
             } else {
-                console.error('Could not set up toggle! Target does not exist');
+                MP.error('Could not set up toggle! Target does not exist');
             }
             // Collapse the searchbox
             Util.setAttr(searchbox, {
@@ -663,9 +663,9 @@ class ToggleSearchbox implements Feature {
             if (notification) notification.style.display = 'none';
             if (guideLink) guideLink.style.display = 'none';
 
-            console.log('[M+] Collapsed the Search box!');
+            MP.log('[M+] Collapsed the Search box!');
         } else {
-            console.error('Could not collapse Search box! Target does not exist');
+            MP.error('Could not collapse Search box! Target does not exist');
         }
     }
 
@@ -677,7 +677,7 @@ class ToggleSearchbox implements Feature {
             elem.style.height = this._height;
             this._isOpen = 'false';
         }
-        if (MP.DEBUG) console.log('Toggled Search box!');
+        if (MP.DEBUG) MP.log('Toggled Search box!');
     }
 
     get settings(): CheckboxSetting {
@@ -787,7 +787,7 @@ class FiletypeSearchFilter implements Feature {
             this._applySelectionToQuery(queryInput);
         });
 
-        console.log('[M+] Added the filetype search filter!');
+        MP.log('[M+] Added the filetype search filter!');
     }
 
     private _bindPanelActions(queryInput: HTMLInputElement): void {
@@ -939,7 +939,7 @@ class BuildTags implements Feature {
         resultsList
             .then((results) => {
                 results.forEach((r) => this._processTagString(r));
-                console.log('[M+] Built tag links!');
+                MP.log('[M+] Built tag links!');
             })
             .then(() => {
                 // Observe the Search results
@@ -948,7 +948,7 @@ class BuildTags implements Feature {
                     resultsList.then((results) => {
                         // Build the tags again
                         results.forEach((r) => this._processTagString(r));
-                        console.log('[M+] Built tag links!');
+                        MP.log('[M+] Built tag links!');
                     });
                 });
             });
@@ -961,7 +961,7 @@ class BuildTags implements Feature {
     private _processTagString = (res: HTMLTableRowElement) => {
         const tagline = <HTMLSpanElement>res.querySelector('.torRowDesc');
 
-        if (MP.DEBUG) console.group(tagline);
+        if (MP.DEBUG) MP.group(tagline);
 
         // Assume brackets contain tags
         let tagString = tagline.innerHTML.replace(/(?:\[|\]|\(|\)|$)/gi, ',');
@@ -978,8 +978,8 @@ class BuildTags implements Feature {
         }
 
         if (MP.DEBUG) {
-            console.log(tags);
-            console.groupEnd();
+            MP.log(tags);
+            MP.groupEnd();
         }
     };
 
@@ -1052,7 +1052,7 @@ class MultiSelectBrowse implements Feature {
             }
         );
 
-        console.log('[M+] Added multi-select browse actions!');
+        MP.log('[M+] Added multi-select browse actions!');
     }
 
     private _ensureToolbar(): void {
@@ -1269,7 +1269,7 @@ class WedgeDownloadDisplayed implements Feature {
             }
         );
 
-        console.log('[M+] Added the wedge/download displayed torrents button!');
+        MP.log('[M+] Added the wedge/download displayed torrents button!');
     }
 
     private _ensureButton(): void {
@@ -1366,7 +1366,7 @@ class WedgeDownloadDisplayed implements Feature {
                         successCount += 1;
                     } catch (error) {
                         failedRows.push(this._rowLabel(row));
-                        console.error('[M+] Failed to download row:', row.id, error);
+                        MP.error('[M+] Failed to download row:', row.id, error);
                     }
                     await this._wait(250);
                 }
@@ -1596,7 +1596,7 @@ class RandomBook implements Feature {
                     },
                     false
                 );
-                console.log('[M+] Added the Random Book button!');
+                MP.log('[M+] Added the Random Book button!');
             })
             .catch((err) => {
                 throw new Error(err);

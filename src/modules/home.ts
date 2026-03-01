@@ -26,7 +26,7 @@ class GiftNewest implements Feature {
      */
     private _init() {
         Check.page().then((page:ValidPage) => {
-            if(MP.DEBUG) console.log('User gifting init on',page);
+            if(MP.DEBUG) MP.log('User gifting init on',page);
 
             if(page === 'home'){
                 this._homePageGifting();
@@ -145,7 +145,7 @@ class GiftNewest implements Feature {
 
                         if (remainingAllowance < giftFinalAmount) {
                             skippedCount += 1;
-                            console.warn(
+                            MP.warn(
                                 `[M+] Skipping ${userName}; ${remainingAllowance} points remaining today.`
                             );
                             if (remainingAllowance === 0) {
@@ -166,13 +166,13 @@ class GiftNewest implements Feature {
                         }
                         //request sending points
                         const jsonResult: string = await Util.getJSON(url);
-                        if (MP.DEBUG) console.log('Gift Result', jsonResult);
+                        if (MP.DEBUG) MP.log('Gift Result', jsonResult);
                         const json = JSON.parse(jsonResult);
                         //if gift was successfully sent
                         if (json.success) {
                             this._recordSuccessfulGift(member, giftFinalAmount);
                         } else if (!json.success) {
-                            console.warn(json.error);
+                            MP.warn(json.error);
                         }
                     }
                 }
@@ -241,7 +241,7 @@ class GiftNewest implements Feature {
         document
             .getElementById('mp_giftAllMsg')!
             .insertAdjacentHTML('beforebegin', '<br>');
-        console.log(`[M+] Adding gift new members button to Home page...`);
+        MP.log(`[M+] Adding gift new members button to Home page...`);
     }
 
     /**
@@ -256,7 +256,7 @@ class GiftNewest implements Feature {
         const footer = this._getNewUsersFooter(fpNM);
 
         if (!fpNM || !footer) {
-            console.warn('[M+] Unable to find the New Users gifting container/footer.');
+            MP.warn('[M+] Unable to find the New Users gifting container/footer.');
             return;
         }
 
@@ -316,7 +316,7 @@ class GiftNewest implements Feature {
 
                     if (remainingAllowance < giftAmount) {
                         skippedCount += 1;
-                        console.warn(
+                        MP.warn(
                             `[M+] Skipping ${userName}; ${remainingAllowance} points remaining today.`
                         );
                         if (remainingAllowance === 0) {
@@ -334,13 +334,13 @@ class GiftNewest implements Feature {
                     firstCall = false;
 
                     const jsonResult = await Util.getJSON(url);
-                    if (MP.DEBUG) console.log('Gift Result', jsonResult);
+                    if (MP.DEBUG) MP.log('Gift Result', jsonResult);
                     const json = JSON.parse(jsonResult);
 
                     if (json.success) {
                         this._recordSuccessfulGift(member, giftAmount);
                     } else {
-                        console.warn(json.error);
+                        MP.warn(json.error);
                     }
                 }
             }
@@ -428,7 +428,7 @@ class GiftNewest implements Feature {
                     if (count >= 100) break;
                 }
             }
-            console.log(`[M+] Selected ${count} ungifted users.`);
+            MP.log(`[M+] Selected ${count} ungifted users.`);
         });
 
         // Add "Select Max Ungifted" button
@@ -447,7 +447,7 @@ class GiftNewest implements Feature {
             const availablePoints = this._getAvailableBonusPointsValue();
 
             if (giftAmount < 5 || giftAmount > 100 || isNaN(giftAmount) || giftAmount === 0) {
-                console.warn('[M+] Cannot select max ungifted users; gift amount is invalid.');
+                MP.warn('[M+] Cannot select max ungifted users; gift amount is invalid.');
                 return;
             }
 
@@ -465,7 +465,7 @@ class GiftNewest implements Feature {
                 }
             }
 
-            console.log(
+            MP.log(
                 `[M+] Selected ${count} ungifted users using ${availablePoints} available points at ${giftAmount} points each.`
             );
         });
@@ -480,7 +480,7 @@ class GiftNewest implements Feature {
         footer.appendChild(openAllBtn);
         footer.appendChild(messageSpan);
 
-        console.log('[M+] Added gifting options to the footer of the page.');
+        MP.log('[M+] Added gifting options to the footer of the page.');
     }
 
     private _getNewUsersContainer(): HTMLDivElement | null {
@@ -655,7 +655,7 @@ class HideNews implements Feature {
 
     private async _init() {
         // NOTE: for development
-        // GM_deleteValue(this._valueTitle);console.warn(`Value of ${this._valueTitle} will be deleted!`);
+        // GM_deleteValue(this._valueTitle);MP.warn(`Value of ${this._valueTitle} will be deleted!`);
 
         this._removeClock();
         this._removeDisclaimer();
@@ -664,13 +664,13 @@ class HideNews implements Feature {
         this._addHiderButton();
         // this._cleanValues(); // FIX: Not working as intended
 
-        console.log('[M+] Cleaned up the home page!');
+        MP.log('[M+] Cleaned up the home page!');
     }
 
     _checkForSeen = async (): Promise<void> => {
         const prevValue: string | undefined = GM_getValue(this._valueTitle);
         const news = this._getNewsItems();
-        if (MP.DEBUG) console.log(this._valueTitle, ':\n', prevValue);
+        if (MP.DEBUG) MP.log(this._valueTitle, ':\n', prevValue);
 
         if (prevValue && news) {
             // Use the icon to split out the known hidden messages
@@ -739,7 +739,7 @@ class HideNews implements Feature {
                     ? GM_getValue(this._valueTitle)
                     : '';
                 if (MP.DEBUG)
-                    console.log(`Hiding... ${previousValue}${entry.textContent}`);
+                    MP.log(`Hiding... ${previousValue}${entry.textContent}`);
 
                 GM_setValue(this._valueTitle, `${previousValue}${entry.textContent}`);
                 entry.remove();
@@ -758,7 +758,7 @@ class HideNews implements Feature {
 
     _cleanValues = (num = 3) => {
         let value: string | undefined = GM_getValue(this._valueTitle);
-        if (MP.DEBUG) console.log(`GM_getValue(${this._valueTitle})`, value);
+        if (MP.DEBUG) MP.log(`GM_getValue(${this._valueTitle})`, value);
         if (value) {
             // Return the last 3 stored items after splitting them at the icon
             value = Util.arrayToString(value.split(this._icon).slice(0 - num));

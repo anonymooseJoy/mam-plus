@@ -19,7 +19,7 @@ class ForumPostMarkers implements Feature {
     }
 
     private async _init() {
-        console.log('[M+] Marking OP and staff forum posts...');
+        MP.log('[M+] Marking OP and staff forum posts...');
 
         const forumPosts = <HTMLTableElement[]>(
             Array.prototype.slice.call(document.querySelectorAll('#mainBody .coltable'))
@@ -89,7 +89,7 @@ class ForumMarkRead implements Feature {
     }
 
     private async _init() {
-        console.log('[M+] Adding forum overview mark-read buttons...');
+        MP.log('[M+] Adding forum overview mark-read buttons...');
         if (window.location.pathname !== '/f') {
             return;
         }
@@ -144,7 +144,7 @@ class ForumUserFilters implements Feature {
     }
 
     private async _init() {
-        console.log('[M+] Applying forum user emphasize/block filters...');
+        MP.log('[M+] Applying forum user emphasize/block filters...');
 
         const emphasizedUsers = Util.csvToArray(
             GM_getValue('priorityUsers_val', '') || ''
@@ -220,7 +220,7 @@ class ForumFLGift implements Feature {
         });
     }
     private async _init() {
-        console.log('[M+] Enabling Forum Gift Button...');
+        MP.log('[M+] Enabling Forum Gift Button...');
         //mainBody is best element with an ID I could find that is a parent to all forum posts
         const mainBody = <HTMLDivElement>document.querySelector('#mainBody');
         //make array of forum posts - there is only one cursor classed object per forum post, so this was best to key off of. wish there were more IDs and such used in forums
@@ -294,7 +294,7 @@ class ForumFLGift implements Feature {
                         url = url.replace('#', '%23');
                         //use MAM+ json get utility to process URL and return results
                         const jsonResult: string = await Util.getJSON(url);
-                        if (MP.DEBUG) console.log('Gift Result', jsonResult);
+                        if (MP.DEBUG) MP.log('Gift Result', jsonResult);
                         //if gift was successfully sent
                         if (JSON.parse(jsonResult).success) {
                             //add the feature text to show success

@@ -50,7 +50,7 @@ class Util {
             thing += 's';
         }
         if (MP.DEBUG) {
-            console.log(`> ${did} ${num} ${thing}`);
+            MP.log(`> ${did} ${num} ${thing}`);
         }
     }
 
@@ -75,7 +75,7 @@ class Util {
                 if (val) {
                     return true;
                 } else {
-                    console.warn(
+                    MP.warn(
                         `startFeature(${settings.title}) Unable to initiate! Could not find element: ${elem}`
                     );
                     return false;
@@ -186,7 +186,7 @@ class Util {
         if (node.firstChild !== null) {
             return <HTMLElement>node.firstChild!.parentElement!;
         } else {
-            console.warn('Node-to-elem without childnode is untested');
+            MP.warn('Node-to-elem without childnode is untested');
             const tempNode: Node = node;
             node.appendChild(tempNode);
             const selected: HTMLElement = <HTMLElement>node.firstChild!.parentElement!;
@@ -218,7 +218,7 @@ class Util {
         label: string,
         rowClass: string
     ): HTMLDivElement {
-        if (MP.DEBUG) console.log(tar);
+        if (MP.DEBUG) MP.log(tar);
 
         if (tar === null || tar.parentElement === null) {
             throw new Error(`Add Tor Details Row: empty node or parent node @ ${tar}`);
@@ -323,13 +323,13 @@ class Util {
                 if (copy && typeof payload === 'string') {
                     // Copy results to clipboard
                     nav.clipboard!.writeText(payload);
-                    console.log('[M+] Copied to your clipboard!');
+                    MP.log('[M+] Copied to your clipboard!');
                 } else {
                     // Run payload function with clipboard text
                     nav.clipboard!.readText().then((text) => {
                         payload(text);
                     });
-                    console.log('[M+] Copied from your clipboard!');
+                    MP.log('[M+] Copied from your clipboard!');
                 }
                 btn.style.color = 'green';
             }
@@ -468,7 +468,7 @@ class Util {
         try {
             parsed = JSON.parse(rawGiftHistory);
         } catch (error) {
-            console.warn('[M+] Invalid recent point-gift data; resetting store.', error);
+            MP.warn('[M+] Invalid recent point-gift data; resetting store.', error);
             GM_setValue(key, '[]');
             return [];
         }
@@ -576,10 +576,10 @@ class Util {
         );
         if (myInfo) {
             const userID = <string>this.endOfHref(myInfo);
-            console.log(`[M+] Logged in userID is ${userID}`);
+            MP.log(`[M+] Logged in userID is ${userID}`);
             return userID;
         }
-        console.log('No logged in user found.');
+        MP.log('No logged in user found.');
         return '';
     }
 
@@ -601,7 +601,7 @@ class Util {
      */
     public static checkDashes(original: string, contained: string): string {
         if (MP.DEBUG) {
-            console.log(
+            MP.log(
                 `checkDashes( ${original}, ${contained} ): Count ${original.indexOf(
                     ' - '
                 )}`
@@ -611,12 +611,12 @@ class Util {
         // Dashes are present
         if (original.indexOf(' - ') !== -1) {
             if (MP.DEBUG) {
-                console.log(`String contains a dash`);
+                MP.log(`String contains a dash`);
             }
             const split: string[] = original.split(' - ');
             if (split[0] === contained) {
                 if (MP.DEBUG) {
-                    console.log(
+                    MP.log(
                         `> String before dash is "${contained}"; using string behind dash`
                     );
                 }
@@ -665,7 +665,7 @@ class Util {
          */
         buildSearchURL: (type: BookData | 'on', inp: string): string => {
             if (MP.DEBUG) {
-                console.log(`goodreads.buildGrSearchURL( ${type}, ${inp} )`);
+                MP.log(`goodreads.buildGrSearchURL( ${type}, ${inp} )`);
             }
 
             let grType: string = type;
@@ -716,7 +716,7 @@ class Util {
         num: number = 3
     ) => {
         if (data === null) {
-            console.warn('getBookAuthors() failed; element was null!');
+            MP.warn('getBookAuthors() failed; element was null!');
             return [];
         } else {
             const authList: string[] = [];
@@ -736,7 +736,7 @@ class Util {
      */
     public static getBookSeries = async (data: NodeListOf<HTMLAnchorElement> | null) => {
         if (data === null) {
-            console.warn('getBookSeries() failed; element was null!');
+            MP.warn('getBookSeries() failed; element was null!');
             return [];
         } else {
             const seriesList: string[] = [];
@@ -773,7 +773,7 @@ class Util {
                     value: data,
                 });
             } else {
-                console.warn('Row title was empty!');
+                MP.warn('Row title was empty!');
             }
         });
 
