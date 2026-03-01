@@ -1,6 +1,76 @@
 /// <reference path="shared.ts" />
 /// <reference path="../util.ts" />
 
+class ForumPostMarkers implements Feature {
+    private _settings: CheckboxSetting = {
+        type: 'checkbox',
+        scope: SettingGroup.Forum,
+        title: 'forumPostMarkers',
+        desc: `Make OP and staff posts more visible in forum threads.`,
+    };
+    private _tar: string = '.coltable';
+
+    constructor() {
+        Util.startFeature(this._settings, this._tar, ['forum thread']).then((t) => {
+            if (t) {
+                this._init();
+            }
+        });
+    }
+
+    private async _init() {
+        console.log('[M+] Marking OP and staff forum posts...');
+
+        const forumPosts = <HTMLTableElement[]>(
+            Array.prototype.slice.call(document.querySelectorAll('#mainBody .coltable'))
+        );
+        const opUserHref = forumPosts[0]
+            ?.querySelector('.colhead a[href*="/u/"]')
+            ?.getAttribute('href');
+
+        forumPosts.forEach((forumPost) => {
+            const authorHref = forumPost
+                .querySelector('.colhead a[href*="/u/"]')
+                ?.getAttribute('href');
+            const avatarBox = <HTMLElement | null>forumPost.querySelector('.forumAviBox');
+            if (!authorHref || !avatarBox) {
+                return;
+            }
+
+            const markerTypes: string[] = [];
+            const avatarText = avatarBox.textContent || '';
+
+            if (authorHref === opUserHref) {
+                markerTypes.push('op');
+            }
+
+            if (/(administrator|moderator|staff)/i.test(avatarText)) {
+                markerTypes.push('staff');
+            }
+
+            if (!markerTypes.length) {
+                return;
+            }
+
+            const markerRoot = document.createElement('div');
+            markerRoot.className = 'mp_forumPostMarkers';
+
+            markerTypes.forEach((markerType) => {
+                const marker = document.createElement('span');
+                marker.className = `mp_forumPostMarker mp_forumPostMarker_${markerType}`;
+                marker.textContent = markerType === 'op' ? 'OP' : 'Staff';
+                markerRoot.appendChild(marker);
+            });
+
+            avatarBox.insertAdjacentElement('afterbegin', markerRoot);
+        });
+    }
+
+    get settings(): CheckboxSetting {
+        return this._settings;
+    }
+}
+
 /**
  * * Allows gifting of FL wedge to members through forum.
  */

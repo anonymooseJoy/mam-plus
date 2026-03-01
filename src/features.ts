@@ -88,6 +88,7 @@ class InitFeatures {
         new Notes();
 
         // Initialize Forum Page functions
+        new ForumPostMarkers();
         new ForumFLGift();
 
         // Initialize Upload Page functions

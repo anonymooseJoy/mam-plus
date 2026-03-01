@@ -377,3 +377,26 @@ test('vault synthetic page replaces stale donation history without a donate form
     await expect(page.locator('#mainBody')).toContainText('Fresh donation history');
     await expect(page.locator('#mainBody')).not.toContainText('Stale donation history');
 });
+
+test('forum synthetic page marks OP and staff posts', async ({ page }) => {
+    await installGMStubs(page, {
+        forumPostMarkers: true,
+        mp_currentPage: 'forum thread',
+        mp_version: '4.4.2',
+    });
+    await loadFixturePage(page, '/f/t/999', 'tests/fixtures/forum-thread.html');
+    await loadUserscript(page);
+
+    await expect(page.locator('a[name="1001"] + .coltable .mp_forumPostMarker_op')).toContainText(
+        'OP'
+    );
+    await expect(
+        page.locator('a[name="1002"] + .coltable .mp_forumPostMarker_staff')
+    ).toContainText('Staff');
+    await expect(
+        page.locator('a[name="1003"] + .coltable .mp_forumPostMarker_staff')
+    ).toContainText('Staff');
+    await expect(page.locator('a[name="1004"] + .coltable .mp_forumPostMarker_op')).toContainText(
+        'OP'
+    );
+});
